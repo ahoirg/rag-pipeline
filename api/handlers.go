@@ -2,12 +2,16 @@ package api
 
 import (
 	"net/http"
+	"rag-pipeline/services"
 )
 
+var ragService *services.RAGService
+
 // InitService initializes the api service
-func InitService() {
-	// TODO: chunker,embeddings,rag, database ?
-	// or only a single service that encapsulates all?
+func InitService() error {
+	var err error
+	ragService, err = services.NewRAGService()
+	return err
 }
 
 // PingHandler handles the health check endpoint

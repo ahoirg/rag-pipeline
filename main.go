@@ -13,7 +13,9 @@ import (
 func main() {
 
 	// Initialize API dependencies
-	api.InitApiDependencies()
+	if err := api.InitApiDependencies(); err != nil {
+		log.Fatalf("Failed to init API dependencies: %v", err)
+	}
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)    // Request logging
