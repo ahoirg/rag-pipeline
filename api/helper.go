@@ -11,3 +11,14 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
 }
+
+// writeError is a helper function to write error responses
+func writeError(w http.ResponseWriter, status int, message string, err error) {
+
+	response := map[string]interface{}{
+		"status":  "error",
+		"message": message + ": " + err.Error(),
+	}
+
+	writeJSON(w, status, response)
+}

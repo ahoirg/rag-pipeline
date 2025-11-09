@@ -23,10 +23,6 @@ func main() {
 	r.Mount("/", api.CreateRAGRouter())
 
 	port := ":8080"
-	log.Println("   GET http://localhost:8080/api/ping") // Health check endpoint
-	//log.Println("   POST http://localhost:8080/api/ask")          // Main RAG endpoint: question --> retrieval --> generation --> response
-	//log.Println("   POST http://localhost:8080/api/askforchunks") // Endpoint to retrieve chunks relevant to the question
-
 	// Start the server
 	if err := http.ListenAndServe(port, r); err != nil {
 		log.Fatalf("Server failed to start: %v", err)

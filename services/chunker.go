@@ -2,14 +2,24 @@ package services
 
 import (
 	"log"
-	"rag-pipeline/models"
 	"strings"
 )
 
-//TODO : basicly splitting into chunks for now
+type ChunkConfig struct {
+	ChunkSize    int
+	ChunkOverlap int
+}
 
+func NewChunker(chunkSize int, chunkOverlap int) *ChunkConfig {
+	return &ChunkConfig{
+		ChunkSize:    chunkSize,
+		ChunkOverlap: chunkOverlap,
+	}
+}
+
+// TODO : basicly splitting into chunks for now
 // ChunkText splits the input text into chunks based on the config(ChunkConfig)
-func ChunkText(text string, config models.ChunkConfig) []string {
+func (config ChunkConfig) ChunkText(text string) []string {
 
 	words := strings.Fields(text)
 	log.Printf(" Document length: %d words", len(words))

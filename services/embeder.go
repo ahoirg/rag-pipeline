@@ -7,19 +7,69 @@ import (
 	"log"
 	"net/http"
 	"rag-pipeline/models"
+	"time"
 )
 
+type OllamaEmbedder struct {
+	BaseURL string
+	Model   string
+	Client  *http.Client
+}
+
+func NewOllamaEmbedder(baseUrl string, modelName string) *OllamaEmbedder {
+	return &OllamaEmbedder{
+		BaseURL: baseUrl,
+		Model:   embeddingModel,
+		Client: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
 // EmbedChunks sends the chunks to the Ollama embedder and returns their embeddings
-func EmbedChunks(chunks []string, e models.OllamaEmbedderConfig) ([][]float32, error) {
+func (e *OllamaEmbedder) EmbedChunks(chunks []string) ([][]float32, error) {
 
 	reqBody := models.EmbedRequest{
 		Model: e.Model,
 		Input: chunks,
 	}
 
+	embedResp, err := e.embed(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to embed chunks: %w", err)
+	}
+
+	log.Printf(" Embedings size: %d", len(embedResp.Embeddings))
+
+	return embedResp.Embeddings, nil
+}
+
+func (e *OllamaEmbedder) EmbedQuery(query string) ([]float32, error) {
+
+	reqBody := models.EmbedRequest{
+		Model: e.Model,
+		Input: []string{query},
+	}
+
+	embedResp, err := e.embed(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to embed the query: %w", err)
+	} else if len(embedResp.Embeddings) <= 0 {
+		return nil, fmt.Errorf("query embeddings: No embeddings found")
+	}
+
+	log.Printf(" Query embeding is completed")
+
+	return embedResp.Embeddings[0], nil
+}
+
+func (e *OllamaEmbedder) embed(reqBody models.EmbedRequest) (models.EmbedResponse, error) {
+
+	var embedResp models.EmbedResponse
+
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, err
+		return embedResp, err
 	}
 
 	resp, err := e.Client.Post(
@@ -28,20 +78,17 @@ func EmbedChunks(chunks []string, e models.OllamaEmbedderConfig) ([][]float32, e
 		bytes.NewBuffer(jsonData),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("ollama request failed: %w", err)
+		return embedResp, fmt.Errorf("ollama request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("ollama returned status %d", resp.StatusCode)
+		return embedResp, fmt.Errorf("ollama returned status %d", resp.StatusCode)
 	}
 
-	var embedResp models.EmbedResponse
 	if err := json.NewDecoder(resp.Body).Decode(&embedResp); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+		return embedResp, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	log.Printf(" Embedings size: %d", len(embedResp.Embeddings))
-
-	return embedResp.Embeddings, nil
+	return embedResp, nil
 }
