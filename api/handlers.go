@@ -122,8 +122,27 @@ func StoreBookHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
-// Todo: implement evaluation handler
-func EvaluationHandler(w http.ResponseWriter, r *http.Request) {
+// EvaluationGenerationHandler returns the evaluation results
+// of the generation part of the RAGpipeline with the eval data
+func EvaluationGenerationHandler(w http.ResponseWriter, r *http.Request) {
+	result, err := evaluator.GetGenerationEvaluateResult()
+
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Evaluation ERROR", err)
+		return
+	}
+
+	response := map[string]interface{}{
+		"status": "success",
+		"data":   result,
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
+// EvaluationRetrievalHandler returns the evaluation results
+// of the Retrieval part of the RAGpipeline with the eval data
+func EvaluationRetrievalHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := evaluator.GetRetrievalEvaluateResult()
 
 	if err != nil {

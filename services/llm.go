@@ -41,7 +41,12 @@ func (llm *LLMService) GenerateResponse(question string, chunks []string) (strin
 		data,
 		question,
 	)
-
+	/*
+		prompt := fmt.Sprintf("Answer the question using ONLY the information from this context: %s.Respond to this request concisely and directly: %s",
+			data,
+			question,
+		)
+	*/
 	generatedResponse, err := llm.generateResponse(prompt)
 	return generatedResponse, err
 }

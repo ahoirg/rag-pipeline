@@ -1,25 +1,8 @@
 package models
 
-type EvalData struct {
-	Context string `json:"context"`
-	QAS     []QA   `json:"qas"`
-}
-
 type QA struct {
 	Question string `json:"question"`
 	Answer   string `json:"answer"`
-}
-
-type EvalCase struct {
-	Question             string
-	ExpectedAnswer       string
-	GroundTruthContextID int
-}
-
-type EvalResult struct {
-	EvalCase        EvalCase
-	SourceChunks    []string
-	GeneratedAnswer string
 }
 
 type RetrievalEvalData struct {
@@ -43,4 +26,18 @@ type RetrievalEvaluationResult struct {
 	AvgPrecision    float64
 	AvgRecall       float64
 	AvgF1           float64
+}
+
+type GenerationEvaluationCase struct {
+	Question             string
+	GroundTruth          string
+	GeneratedAnswer      string
+	GroundTruthEmbedding []float32
+	GeneratedEmbedding   []float32
+	SimilarityScore      float64
+}
+
+type GenerationEvaluationResult struct {
+	TestCaseResults    []GenerationEvaluationCase
+	AvgSimilarityScore float64
 }
