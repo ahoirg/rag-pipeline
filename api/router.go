@@ -17,9 +17,10 @@ func CreateRAGRouter() *chi.Mux {
 	r.Post("/api/storebook", StoreBookHandler)
 
 	log.Println("   GET http://localhost:8080/api/ping")          // Health check endpoint
-	log.Println("   POST http://localhost:8080/api/ask")          // Main RAG endpoint: question --> retrieval --> generation --> response
-	log.Println("   POST http://localhost:8080/api/ask-directly") //  question --> generation --> response
+	log.Println("   GET http://localhost:8080/api/evaluation")    // get evaluation result of evalDATA
 	log.Println("   POST http://localhost:8080/api/storebook")    // Store document into vector DB
+	log.Println("   POST http://localhost:8080/api/ask")          // Main RAG endpoint: question --> retrieval --> generation --> response
+	log.Println("   POST http://localhost:8080/api/ask-directly") // question --> generation --> response
 
 	return r
 }

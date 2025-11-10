@@ -45,7 +45,7 @@ func (r *RAGService) StoreData(text string) error {
 }
 
 func (r *RAGService) GenerateResponse(question string) (string, []string, error) {
-	retrievalResult, err := r.retrieveRelevantChunks(question, 3)
+	retrievalResult, err := r.RetrieveRelevantChunks(question, 3)
 	if err != nil {
 		return "", nil, err
 	}
@@ -102,14 +102,24 @@ func (r *RAGService) prepareVectorDatabase(text string) error {
 }
 
 // chunkandEmbed loads the document, chunks it and generates embeddings for the chunks
-func (r *RAGService) chunkandEmbed(text string) ([]string, [][]float32, error) {
+func (r *RAGService) chunkandEmbed(text string) ([]models.Chunk, [][]float32, error) {
 
 	chunks := r.Chunker.ChunkText(text)
 	if len(chunks) == 0 {
 		return nil, nil, fmt.Errorf("chunking failed: no chunks were created from the given text")
 	}
 
-	embeddings, err := r.Embedder.EmbedChunks(chunks)
+	chunk_texts := make([]string, len(chunks)) // 'make' for fast, direct indext assignment and no allocation
+	for i, chunk := range chunks {
+		chunk_texts[i] = chunk.Text
+	}
+
+	//for test
+	//jsonData, _ := json.MarshalIndent(chunks, "", "  ")
+	//os.WriteFile("data/chunks", jsonData, 0644)
+	//
+
+	embeddings, err := r.Embedder.EmbedChunks(chunk_texts)
 	if err != nil {
 		log.Printf("Error: %v", err)
 		return nil, nil, err
@@ -118,26 +128,32 @@ func (r *RAGService) chunkandEmbed(text string) ([]string, [][]float32, error) {
 	return chunks, embeddings, nil
 }
 
-func (r *RAGService) retrieveRelevantChunks(query string, topK int) ([]models.RetrievalResult, error) {
+func (r *RAGService) RetrieveRelevantChunks(query string, topK int) ([]models.RetrievalResult, error) {
+	//log.Println("RetrieveRelevantChunks is running...")
 
 	queryEmbedding, err := r.Embedder.EmbedQuery(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to embed query: %w", err)
+		return nil, fmt.Errorf("RetrieveRelevantChunks: failed to embed query: %w", err)
 	}
 
 	searchResult, err := r.QdrantDB.QueryQdrant(queryEmbedding, uint64(topK))
 	if err != nil {
-		return nil, fmt.Errorf("failed to query Qdrant: %w", err)
+		return nil, fmt.Errorf("RetrieveRelevantChunks: failed to query Qdrant: %w", err)
 	}
 
 	var results []models.RetrievalResult
 	for _, point := range searchResult {
 		results = append(results, models.RetrievalResult{
-			ChunkID: point.Id.GetNum(),
+			ChunkID: int(point.Payload["id"].GetIntegerValue()),
 			Text:    point.Payload["text"].GetStringValue(),
 			Score:   point.Score,
 		})
 	}
-
+	/*
+		for _, a := range results {
+			println(a.ChunkID)
+		}
+	*/
+	//log.Println("RetrieveRelevantChunks was DONE!")
 	return results, nil
 }

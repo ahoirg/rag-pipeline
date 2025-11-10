@@ -1,102 +1,67 @@
 package evaluation
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"rag-pipeline/models"
 	"rag-pipeline/services"
 )
 
+// TODO: moveto config
 const (
-	evaluationDataPath       = "evalData/notre_dame_eval.json"
-	evaluationSourceDataPath = "evalData/notre_dame_eval.json"
-	evalCollectionName       = "eval_collection"
+	evaluation_retrievalDataPath = "evalData/retrieval/notre_dame_qa_chunks.json"
+	evaluationSourceDataPath     = "evalData/notre_dame_contexts.txt"
+	evalCollectionName           = "eval_collection"
 )
 
 type Evaluator struct {
-	RAGService   *services.RAGService
-	EvalCases    []models.EvalCase
-	IsIntialized bool
+	RAGService                *services.RAGService
+	RetrievalEvaluationResult *models.RetrievalEvaluationResult
+	IsIntialized              bool
 }
 
-// NewEvaluator initializes the Evaluator with its own RAGService
 func NewEvaluator() *Evaluator {
 	return &Evaluator{
-		RAGService:   services.NewRAGService(evalCollectionName),
-		IsIntialized: false,
+		RAGService:                services.NewRAGService(evalCollectionName),
+		RetrievalEvaluationResult: nil,   //
+		IsIntialized:              false, // insert evaluation data into the database only once
 	}
 }
 
-func (eval *Evaluator) GetEvaluationRessults() (string, error) {
-	if err := eval.initializeEval(); err != nil {
-		log.Println("could not create Evaluation collection.", err)
-		return "", err
+func (eval *Evaluator) GetRetrievalEvaluateResult() (*models.RetrievalEvaluationResult, error) {
+	if eval.RetrievalEvaluationResult != nil {
+		return eval.RetrievalEvaluationResult, nil
 	}
-	return "", nil
+
+	if err := eval.prepareEvalData(); err != nil {
+		log.Println("evaluation.go| could not create evaluation collection.", err)
+		return nil, err
+	}
+
+	retrievalEvaluationResult, err := eval.EvaluateRetrieval(evaluation_retrievalDataPath)
+	if err != nil {
+		log.Println("evaluation.go| could not run retrieval evaluation.", err)
+		return nil, err
+	}
+
+	eval.RetrievalEvaluationResult = retrievalEvaluationResult
+	return eval.RetrievalEvaluationResult, nil
 }
 
-func (eval *Evaluator) Evaluation() {
-	if err := eval.initializeEval(); err != nil {
-		log.Println("could not create Evaluation collection.", err)
-	}
-}
-
-func (eval *Evaluator) initializeEval() error {
+func (eval *Evaluator) prepareEvalData() error {
 	if eval.IsIntialized {
 		return nil
 	}
 
-	text, err := services.LoadDocument(evaluationSourceDataPath)
+	text, err := LoadDocument(evaluationSourceDataPath)
 	if err != nil {
-		return fmt.Errorf("failed prepareQdrantDB: %w", err)
+		return fmt.Errorf("evaluation.go|failed prepareQdrantDB: %w", err)
 	}
 
 	if err := eval.RAGService.StoreData(text); err != nil {
-		return fmt.Errorf("failed prepareQdrantDB: %w", err)
+		return fmt.Errorf("evaluation.go|failed prepareQdrantDB: %w", err)
 	}
 
-	evalData, err := loadEvaluationData(evaluationDataPath)
-	if err != nil {
-		return err
-	}
-
-	eval.EvalCases = generateTestCases(evalData)
-
-	eval.initializeEval()
+	eval.IsIntialized = true
 	return nil
-}
-
-func loadEvaluationData(filePath string) ([]models.EvalData, error) {
-
-	jsonString, err := services.LoadDocument(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load evaluation file: %w", err)
-	}
-
-	var evalData []models.EvalData
-	if err := json.Unmarshal([]byte(jsonString), &evalData); err != nil {
-		return nil, fmt.Errorf("failed to parse evaluation JSON: %w", err)
-	}
-
-	log.Printf("Loaded %d contexts with questions\n", len(evalData))
-
-	return evalData, nil
-}
-
-func generateTestCases(evalData []models.EvalData) []models.EvalCase {
-	var testCases []models.EvalCase
-
-	for contextID, data := range evalData {
-		for _, qa := range data.QAS {
-			testCases = append(testCases, models.EvalCase{
-				Question:             qa.Question,
-				ExpectedAnswer:       qa.Answer,
-				GroundTruthContextID: contextID,
-			})
-		}
-	}
-
-	log.Printf("Generated %d test cases\n", len(testCases))
-	return testCases
 }

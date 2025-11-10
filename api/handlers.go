@@ -124,5 +124,17 @@ func StoreBookHandler(w http.ResponseWriter, r *http.Request) {
 
 // Todo: implement evaluation handler
 func EvaluationHandler(w http.ResponseWriter, r *http.Request) {
-	evaluator.Evaluation()
+	result, err := evaluator.GetRetrievalEvaluateResult()
+
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Evaluation ERROR", err)
+		return
+	}
+
+	response := map[string]interface{}{
+		"status": "success",
+		"data":   result,
+	}
+
+	writeJSON(w, http.StatusOK, response)
 }

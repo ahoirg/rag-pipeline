@@ -53,9 +53,9 @@ func (e *OllamaEmbedder) EmbedQuery(query string) ([]float32, error) {
 
 	embedResp, err := e.embed(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("failed to embed the query: %w", err)
+		return nil, fmt.Errorf("embeder.go|EmbedQuery: failed to embed the query: %w", err)
 	} else if len(embedResp.Embeddings) <= 0 {
-		return nil, fmt.Errorf("query embeddings: No embeddings found")
+		return nil, fmt.Errorf("embeder.go|EmbedQuery: No embeddings found")
 	}
 
 	log.Printf(" Query embeding is completed")
@@ -78,16 +78,16 @@ func (e *OllamaEmbedder) embed(reqBody models.EmbedRequest) (models.EmbedRespons
 		bytes.NewBuffer(jsonData),
 	)
 	if err != nil {
-		return embedResp, fmt.Errorf("ollama request failed: %w", err)
+		return embedResp, fmt.Errorf("embeder.go|embed: ollama request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return embedResp, fmt.Errorf("ollama returned status %d", resp.StatusCode)
+		return embedResp, fmt.Errorf("embeder.go|embed: ollama returned status %d", resp.StatusCode)
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&embedResp); err != nil {
-		return embedResp, fmt.Errorf("failed to decode response: %w", err)
+		return embedResp, fmt.Errorf("embeder.go|embed: failed to decode response: %w", err)
 	}
 
 	return embedResp, nil

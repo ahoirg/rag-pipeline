@@ -21,3 +21,26 @@ type EvalResult struct {
 	SourceChunks    []string
 	GeneratedAnswer string
 }
+
+type RetrievalEvalData struct {
+	Question       string  `json:"question"`
+	ExpextedAnswer string  `json:"answer"`
+	RelevantChunks []Chunk `json:"relevantChunks"`
+}
+
+type RetrievalTestCaseResult struct {
+	Question          string
+	ExpectedAnswer    string
+	ExpectedChunkIDs  []int
+	RetrievedChunkIDs []int
+	Precision         float64
+	Recall            float64
+	F1                float64
+}
+
+type RetrievalEvaluationResult struct {
+	TestCaseResults []RetrievalTestCaseResult
+	AvgPrecision    float64
+	AvgRecall       float64
+	AvgF1           float64
+}

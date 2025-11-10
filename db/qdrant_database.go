@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"rag-pipeline/models"
 
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -52,7 +53,7 @@ func (qdb *QdrantDatabase) CreateQdrantCollection(vectorSize uint64) error {
 }
 
 // AddVectorsToQdrant adds the given chunks and their corresponding embeddings to the collection
-func (qdb *QdrantDatabase) AddVectorsToQdrant(chunks []string, embeddings [][]float32) error {
+func (qdb *QdrantDatabase) AddVectorsToQdrant(chunks []models.Chunk, embeddings [][]float32) error {
 
 	var points []*qdrant.PointStruct
 
@@ -61,7 +62,8 @@ func (qdb *QdrantDatabase) AddVectorsToQdrant(chunks []string, embeddings [][]fl
 			Id:      qdrant.NewIDNum(uint64(i)),
 			Vectors: qdrant.NewVectors(embeddings[i]...),
 			Payload: qdrant.NewValueMap(map[string]any{
-				"text": chunks[i],
+				"id":   chunks[i].ID,
+				"text": chunks[i].Text,
 			}),
 		})
 	}
@@ -91,7 +93,7 @@ func (qdb *QdrantDatabase) QueryQdrant(queryEmbedding []float32, limit uint64) (
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query Qdrant: %w", err)
+		return nil, fmt.Errorf("qdrant_database: failed to query Qdrant: %w", err)
 	}
 
 	return searchResult, nil
