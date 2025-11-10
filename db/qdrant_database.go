@@ -21,6 +21,10 @@ func NewQdrantDatabase(qdrantHost string, qdrantPort int, collectionName string)
 		log.Fatalf("Failed to create Qdrant client: %v", err)
 	}
 
+	// It creates only the client,
+	// but the collection has not been created in the DB yet
+	// it will create first insert data
+
 	return &QdrantDatabase{
 		Client:         client,
 		CollectionName: collectionName,
@@ -29,13 +33,11 @@ func NewQdrantDatabase(qdrantHost string, qdrantPort int, collectionName string)
 
 // GetQdrantCollectionNames gets the names of all collections in the Qdrant database
 func (qdb *QdrantDatabase) GetQdrantCollectionNames() ([]string, error) {
-	names, err := qdb.Client.ListCollections(context.Background())
-	if err != nil {
-		log.Printf("Error: %v", err)
-		return nil, err
-	}
+	return qdb.Client.ListCollections(context.Background())
+}
 
-	return names, nil
+func (qdb *QdrantDatabase) CollectionExists() (bool, error) {
+	return qdb.Client.CollectionExists(context.Background(), qdb.CollectionName)
 }
 
 // CreateQdrantCollection creates a new collection in Qdrant with the collectionName and vector size
@@ -93,6 +95,10 @@ func (qdb *QdrantDatabase) QueryQdrant(queryEmbedding []float32, limit uint64) (
 	}
 
 	return searchResult, nil
+}
+
+func (qdb *QdrantDatabase) DeleteCollection() error {
+	return qdb.Client.DeleteCollection(context.Background(), qdb.CollectionName)
 }
 
 // newQdrantClient creates and returns a new Qdrant client

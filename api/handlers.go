@@ -2,18 +2,22 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"rag-pipeline/evaluation"
 	"rag-pipeline/models"
 	"rag-pipeline/services"
 )
 
 var ragService *services.RAGService
+var evaluator *evaluation.Evaluator
+
+const apiCollectionName = "api_collection"
 
 // InitService initializes the api service
-func InitService() error {
-	var err error
-	ragService, err = services.NewRAGService()
-	return err
+func InitService() {
+	ragService = services.NewRAGService(apiCollectionName)
+	evaluator = evaluation.NewEvaluator()
 }
 
 // PingHandler handles the health check endpoint
@@ -40,7 +44,7 @@ func AskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	generatedResponse, err := ragService.GenerateResponse(req.Query)
+	generatedResponse, chunks, err := ragService.GenerateResponse(req.Query)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to generate the response", err)
 		return
@@ -49,6 +53,7 @@ func AskHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"status":  "success",
 		"message": generatedResponse,
+		"data":    chunks,
 	}
 
 	writeJSON(w, http.StatusOK, response)
@@ -82,31 +87,42 @@ func AskDirectlyHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
-// AskDirectlyHandler handles the ask-for-chunks endpoint
-// retrieves relevant chunks without generating a full response
-func AskForChunksHandler(w http.ResponseWriter, r *http.Request) {
+// StoreBookHandler is endpoint to store document into vector DB
+func StoreBookHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
-	var req models.AskRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "Invalid request body", err)
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		writeError(w, http.StatusMethodNotAllowed, "Set the key: 'file' ", err)
+		return
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "File could not be converted to text", err)
 		return
 	}
 
-	chunks, err := ragService.RetrieveRelevantChunks(req.Query, 5)
+	err = ragService.StoreData(string(content))
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to retrieve relevant chunks", err)
+		writeError(w, http.StatusInternalServerError, "Failed to store data", err)
 		return
 	}
 
 	response := map[string]interface{}{
 		"status":  "success",
-		"message": "RAG Pipeline API is running",
-		"data":    chunks,
+		"message": "File data stored successfully",
 	}
 
 	writeJSON(w, http.StatusOK, response)
+}
+
+// Todo: implement evaluation handler
+func EvaluationHandler(w http.ResponseWriter, r *http.Request) {
+	evaluator.Evaluation()
 }

@@ -7,9 +7,9 @@ import (
 )
 
 // LoadDocument reads the document and returns its content as a string
-func loadDocument() (string, error) {
+func LoadDocument(path string) (string, error) {
 
-	data, err := os.ReadFile(bookPath)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", fmt.Errorf("failed to load document: %w", err)
 	}

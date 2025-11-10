@@ -11,19 +11,20 @@ func CreateRAGRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Get("/api/ping", PingHandler)
+	r.Get("/api/evaluation", EvaluationHandler)
 	r.Post("/api/ask", AskHandler)
 	r.Post("/api/ask-directly", AskDirectlyHandler)
-	r.Post("/api/ask-for-chunks", AskForChunksHandler)
+	r.Post("/api/storebook", StoreBookHandler)
 
-	log.Println("   GET http://localhost:8080/api/ping")            // Health check endpoint
-	log.Println("   POST http://localhost:8080/api/ask")            // Main RAG endpoint: question --> retrieval --> generation --> response
-	log.Println("   POST http://localhost:8080/api/ask-directly")   //  question --> generation --> response
-	log.Println("   POST http://localhost:8080/api/ask-for-chunks") // Endpoint to retrieve chunks relevant to the question
+	log.Println("   GET http://localhost:8080/api/ping")          // Health check endpoint
+	log.Println("   POST http://localhost:8080/api/ask")          // Main RAG endpoint: question --> retrieval --> generation --> response
+	log.Println("   POST http://localhost:8080/api/ask-directly") //  question --> generation --> response
+	log.Println("   POST http://localhost:8080/api/storebook")    // Store document into vector DB
 
 	return r
 }
 
 // InitApiDependencies initializes all services required by the API layer
-func InitApiDependencies() error {
-	return InitService()
+func InitApiDependencies() {
+	InitService()
 }

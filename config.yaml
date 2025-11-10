@@ -1,0 +1,14 @@
+chunk:
+  size: 300
+  overlap: 30
+
+qdrant:
+  host: "localhost"
+  port: 6334
+
+embedding:
+  model_dimension: 768
+  model_name: "nomic-embed-text"
+
+ollama:
+  base_url: "http://localhost:11434"
