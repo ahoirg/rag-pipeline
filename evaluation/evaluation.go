@@ -9,9 +9,9 @@ import (
 
 // TODO: moveto config
 const (
-	evaluation_retrievalDataPath  = "evalData/retrieval/notre_dame_qa_chunks.json"
-	evaluation_generationDataPath = "evalData/generation/notre_dame_qa_min.json"
-	evaluationSourceDataPath      = "evalData/notre_dame_contexts.txt"
+	evaluation_retrievalDataPath  = "eval_data/retrieval/notre_dame_qa_chunks.json"
+	evaluation_generationDataPath = "eval_data/generation/notre_dame_qa_min.json"
+	evaluationSourceDataPath      = "eval_data/notre_dame_contexts.txt"
 	evalCollectionName            = "eval_collection"
 )
 

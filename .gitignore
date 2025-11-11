@@ -33,7 +33,3 @@ go.work.sum
 
 # Ignore local Qdrant data
 qdrant_storage/
-
-data/
-
-evalData/
