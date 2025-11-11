@@ -11,6 +11,7 @@ type ChunkConfig struct {
 	ChunkOverlap int
 }
 
+// NewChunker creates and returns a new ChunkConfig
 func NewChunker(chunkSize int, chunkOverlap int) *ChunkConfig {
 	return &ChunkConfig{
 		ChunkSize:    chunkSize,
@@ -19,7 +20,7 @@ func NewChunker(chunkSize int, chunkOverlap int) *ChunkConfig {
 }
 
 // TODO : basicly splitting into chunks for now
-// ChunkText splits the input text into chunks based on the config(ChunkConfig)
+// ChunkText splits the input text into chunks based on the config.Chunk
 func (config ChunkConfig) ChunkText(text string) []models.Chunk {
 
 	words := strings.Fields(text)
@@ -27,6 +28,7 @@ func (config ChunkConfig) ChunkText(text string) []models.Chunk {
 
 	var chunks []models.Chunk
 	chunkID := 0
+
 	// Iterate through the words, creating chunks
 	// yhe step size is calculated by ChunkSize - ChunkOverlap
 	for i := 0; i < len(words); i += (config.ChunkSize - config.ChunkOverlap) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"rag-pipeline/models"
+	"rag-pipeline/utils"
 )
 
 func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*models.RetrievalEvaluationResult, error) {
@@ -52,7 +53,7 @@ func calculateRetrievalMetricResults(testCaseResults []models.RetrievalTestCaseR
 	copy(duplicatedTestCaseResults, testCaseResults)
 
 	for i, tc := range testCaseResults {
-		truePositives := CalculateTruePositive(tc.ExpectedChunkIDs, tc.RetrievedChunkIDs)
+		truePositives := utils.CalculateTruePositive(tc.ExpectedChunkIDs, tc.RetrievedChunkIDs)
 		falsePositive := len(tc.RetrievedChunkIDs) - truePositives
 		falseNegative := len(tc.ExpectedChunkIDs) - truePositives
 
@@ -77,14 +78,14 @@ func calculateRetrievalMetricResults(testCaseResults []models.RetrievalTestCaseR
 
 	return &models.RetrievalEvaluationResult{
 		TestCaseResults: duplicatedTestCaseResults,
-		AvgPrecision:    Average(precisions),
-		AvgRecall:       Average(recalls),
-		AvgF1:           Average(f1s),
+		AvgPrecision:    utils.Average(precisions),
+		AvgRecall:       utils.Average(recalls),
+		AvgF1:           utils.Average(f1s),
 	}
 }
 
 func loadQuestions(filePath string) ([]models.RetrievalEvalData, error) {
-	jsonString, err := LoadDocument(filePath)
+	jsonString, err := utils.LoadDocument(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("retrieval.go| failed to LoadQuestions file: %w", err)
 	}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"log"
+	"rag-pipeline/models"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -11,6 +12,7 @@ func CreateRAGRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Get("/api/ping", PingHandler)
+	r.Get("/api/evaluation", EvaluationHandler)
 	r.Get("/api/evaluation/retrieval", EvaluationRetrievalHandler)
 	r.Get("/api/evaluation/generation", EvaluationGenerationHandler)
 	r.Post("/api/ask", AskHandler)
@@ -28,6 +30,6 @@ func CreateRAGRouter() *chi.Mux {
 }
 
 // InitApiDependencies initializes all services required by the API layer
-func InitApiDependencies() {
-	InitService()
+func InitApiDependencies(config *models.Config) {
+	InitService(config)
 }

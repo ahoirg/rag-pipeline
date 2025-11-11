@@ -11,15 +11,18 @@ import (
 )
 
 type OllamaEmbedder struct {
-	BaseURL string
-	Model   string
-	Client  *http.Client
+	BaseURL  string
+	Endpoint string
+	Model    string
+	Client   *http.Client
 }
 
-func NewOllamaEmbedder(baseUrl string, modelName string) *OllamaEmbedder {
+// NewOllamaEmbedder creates and returns a new OllamaEmbedder
+func NewOllamaEmbedder(baseUrl string, modelName string, endpoint string) *OllamaEmbedder {
 	return &OllamaEmbedder{
-		BaseURL: baseUrl,
-		Model:   embeddingModel,
+		BaseURL:  baseUrl,
+		Endpoint: endpoint,
+		Model:    modelName,
 		Client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -44,6 +47,7 @@ func (e *OllamaEmbedder) EmbedChunks(chunks []string) ([][]float32, error) {
 	return embedResp.Embeddings, nil
 }
 
+// EmbedQuery sends the query to the Ollama embedder and returns its embeddings
 func (e *OllamaEmbedder) EmbedQuery(query string) ([]float32, error) {
 
 	reqBody := models.EmbedRequest{
@@ -58,11 +62,12 @@ func (e *OllamaEmbedder) EmbedQuery(query string) ([]float32, error) {
 		return nil, fmt.Errorf("embeder.go|EmbedQuery: No embeddings found")
 	}
 
-	log.Printf(" Query embeding is completed")
+	log.Printf("embeder.go|EmbedQuery: query embeding is completed")
 
 	return embedResp.Embeddings[0], nil
 }
 
+// embed sends the given embedding request to the Ollama and returns the decoded embedding response
 func (e *OllamaEmbedder) embed(reqBody models.EmbedRequest) (models.EmbedResponse, error) {
 
 	var embedResp models.EmbedResponse
@@ -73,7 +78,7 @@ func (e *OllamaEmbedder) embed(reqBody models.EmbedRequest) (models.EmbedRespons
 	}
 
 	resp, err := e.Client.Post(
-		e.BaseURL+"/api/embed",
+		e.BaseURL+e.Endpoint,
 		"application/json",
 		bytes.NewBuffer(jsonData),
 	)

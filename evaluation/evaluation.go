@@ -5,14 +5,7 @@ import (
 	"log"
 	"rag-pipeline/models"
 	"rag-pipeline/services"
-)
-
-// TODO: moveto config
-const (
-	evaluation_retrievalDataPath  = "eval_data/retrieval/notre_dame_qa_chunks.json"
-	evaluation_generationDataPath = "eval_data/generation/notre_dame_qa_min.json"
-	evaluationSourceDataPath      = "eval_data/notre_dame_contexts.txt"
-	evalCollectionName            = "eval_collection"
+	"rag-pipeline/utils"
 )
 
 type Evaluator struct {
@@ -20,17 +13,21 @@ type Evaluator struct {
 	RetrievalEvaluationResult  *models.RetrievalEvaluationResult
 	GenerationEvaluationResult *models.GenerationEvaluationResult
 	IsIntialized               bool
+	Config                     *models.Config
 }
 
-func NewEvaluator() *Evaluator {
+// NewChunker creates and returns a new Evaluator
+func NewEvaluator(config *models.Config) *Evaluator {
 	return &Evaluator{
-		RAGService:                 services.NewRAGService(evalCollectionName),
+		RAGService:                 services.NewRAGService(config, config.Evaluation.CollectionName),
 		RetrievalEvaluationResult:  nil,   //
 		GenerationEvaluationResult: nil,   //
 		IsIntialized:               false, // insert evaluation data into the database only once
+		Config:                     config,
 	}
 }
 
+// GetRetrievalEvaluateResult returns the retrieval evaluation result
 func (eval *Evaluator) GetRetrievalEvaluateResult() (*models.RetrievalEvaluationResult, error) {
 	if eval.RetrievalEvaluationResult != nil {
 		return eval.RetrievalEvaluationResult, nil
@@ -41,7 +38,7 @@ func (eval *Evaluator) GetRetrievalEvaluateResult() (*models.RetrievalEvaluation
 		return nil, err
 	}
 
-	retrievalEvaluationResult, err := eval.EvaluateRetrieval(evaluation_retrievalDataPath)
+	retrievalEvaluationResult, err := eval.EvaluateRetrieval(eval.Config.Evaluation.RetrievalDataPath)
 	if err != nil {
 		log.Println("evaluation.go| could not run retrieval evaluation.", err)
 		return nil, err
@@ -51,6 +48,7 @@ func (eval *Evaluator) GetRetrievalEvaluateResult() (*models.RetrievalEvaluation
 	return eval.RetrievalEvaluationResult, nil
 }
 
+// GetGenerationEvaluateResult returns the generation evaluation result
 func (eval *Evaluator) GetGenerationEvaluateResult() (*models.GenerationEvaluationResult, error) {
 	if eval.GenerationEvaluationResult != nil {
 		return eval.GenerationEvaluationResult, nil
@@ -61,7 +59,7 @@ func (eval *Evaluator) GetGenerationEvaluateResult() (*models.GenerationEvaluati
 		return nil, err
 	}
 
-	generationEvaluationResult, err := eval.EvaluateGeneration(evaluation_generationDataPath)
+	generationEvaluationResult, err := eval.EvaluateGeneration(eval.Config.Evaluation.GenerationDataPath)
 	if err != nil {
 		log.Println("evaluation.go| could not run retrieval evaluation.", err)
 		return nil, err
@@ -71,12 +69,13 @@ func (eval *Evaluator) GetGenerationEvaluateResult() (*models.GenerationEvaluati
 	return eval.GenerationEvaluationResult, nil
 }
 
+// prepareEvalData loads the evaluation source data and stores it in the vector database
 func (eval *Evaluator) prepareEvalData() error {
 	if eval.IsIntialized {
 		return nil
 	}
 
-	text, err := LoadDocument(evaluationSourceDataPath)
+	text, err := utils.LoadDocument(eval.Config.Evaluation.SourceDataPath)
 	if err != nil {
 		return fmt.Errorf("evaluation.go|failed prepareQdrantDB: %w", err)
 	}

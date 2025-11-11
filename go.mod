@@ -6,6 +6,7 @@ require (
 	github.com/drewlanenga/govector v0.0.0-20220726163947-b958ac08bc93
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/qdrant/go-client v1.15.2
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

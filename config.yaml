@@ -1,3 +1,7 @@
+base_api:
+  port: "8080" # // rag-pipeline api port
+  collection_name: "api_collection"
+  
 chunk:
   size: 300
   overlap: 30
@@ -9,6 +13,17 @@ qdrant:
 embedding:
   model_dimension: 768
   model_name: "nomic-embed-text"
+  endpoint: "/api/embed"
 
 ollama:
   base_url: "http://localhost:11434"
+
+generator:
+  model_name: "tinyllama"
+  endpoint: "/api/generate"
+
+evaluation:
+  retrieval_data_path: "eval_data/retrieval/notre_dame_qa_chunks.json"
+  generation_data_path: "eval_data/generation/notre_dame_qa_min.json"
+  source_data_path: "eval_data/notre_dame_contexts.txt"
+  collection_name: "eval_collection"

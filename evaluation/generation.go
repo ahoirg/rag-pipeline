@@ -4,57 +4,43 @@ import (
 	"encoding/json"
 	"fmt"
 	"rag-pipeline/models"
+	"rag-pipeline/utils"
 
 	"github.com/drewlanenga/govector"
 )
 
 func (eval *Evaluator) EvaluateGeneration(generationDataPath string) (*models.GenerationEvaluationResult, error) {
-	qas, err := eval.GetGeneratorQA(generationDataPath)
+	qas, err := eval.getGeneratorQA(generationDataPath)
 	if err != nil {
 		return nil, err
 	}
 
-	testCases, err := eval.GetGeneratorResponse(qas)
+	generationCases, err := eval.GetGeneratorResponse(qas)
 	if err != nil {
 		return nil, err
 	}
 
-	err = eval.GetEmbeddedResults(&testCases)
+	err = eval.GetEmbeddedResults(&generationCases)
 	if err != nil {
 		return nil, err
 	}
 
-	err = eval.CalculateSimilarityScores(&testCases)
+	err = eval.CalculateSimilarityScores(&generationCases)
 	if err != nil {
 		return nil, err
 	}
 
 	var totalScore float64
-	for _, tc := range testCases {
+	for _, tc := range generationCases {
 		totalScore += tc.SimilarityScore
 	}
 
 	result := &models.GenerationEvaluationResult{
-		TestCaseResults:    testCases,
-		AvgSimilarityScore: totalScore / float64(len(testCases)),
+		TestCaseResults:    generationCases,
+		AvgSimilarityScore: totalScore / float64(len(generationCases)),
 	}
 
 	return result, nil
-}
-
-func (eval *Evaluator) GetGeneratorQA(generationDataPath string) ([]models.QA, error) {
-
-	text, err := LoadDocument(generationDataPath)
-	if err != nil {
-		return nil, fmt.Errorf("generation.go |failed to load QA JSON: %w", err)
-	}
-
-	var qaData []models.QA
-	if err := json.Unmarshal([]byte(text), &qaData); err != nil {
-		return nil, fmt.Errorf("generation.go |failed to parse QA JSON: %w", err)
-	}
-
-	return qaData, nil
 }
 
 func (eval *Evaluator) GetGeneratorResponse(qaData []models.QA) ([]models.GenerationEvaluationCase, error) {
@@ -126,4 +112,19 @@ func (eval *Evaluator) CalculateSimilarityScores(results *[]models.GenerationEva
 
 	}
 	return nil
+}
+
+func (eval *Evaluator) getGeneratorQA(generationDataPath string) ([]models.QA, error) {
+
+	text, err := utils.LoadDocument(generationDataPath)
+	if err != nil {
+		return nil, fmt.Errorf("generation.go |failed to load QA JSON: %w", err)
+	}
+
+	var qaData []models.QA
+	if err := json.Unmarshal([]byte(text), &qaData); err != nil {
+		return nil, fmt.Errorf("generation.go |failed to parse QA JSON: %w", err)
+	}
+
+	return qaData, nil
 }

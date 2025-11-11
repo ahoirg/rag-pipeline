@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"rag-pipeline/models"
 )
 
 type LLMService struct {
@@ -13,10 +14,11 @@ type LLMService struct {
 	Client    *http.Client
 }
 
-func NewLLMService(baseUrl string, Client *http.Client) *LLMService {
+// NewLLMService creates and returns a new LLMService
+func NewLLMService(baseUrl string, endpoint string, modelName string, Client *http.Client) *LLMService {
 	return &LLMService{
-		EndPoint:  baseUrl + "/api/generate",
-		ModelName: "tinyllama",
+		EndPoint:  baseUrl + endpoint,
+		ModelName: modelName,
 		Client:    Client,
 	}
 }
@@ -54,11 +56,12 @@ func (llm *LLMService) GenerateResponse(question string, chunks []string) (strin
 // generateResponse sends the prompt to the LLM and returns the generated response
 func (llm *LLMService) generateResponse(prompt string) (string, error) {
 
-	reqBody := map[string]interface{}{
-		"model":  "tinyllama",
-		"prompt": prompt,
-		"stream": false,
+	reqBody := models.OllamaRequest{
+		Model:  llm.ModelName,
+		Prompt: prompt,
+		Stream: false,
 	}
+
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", err
@@ -79,11 +82,7 @@ func (llm *LLMService) generateResponse(prompt string) (string, error) {
 		return "", fmt.Errorf("ollama returned status %d", resp.StatusCode)
 	}
 
-	var result struct {
-		Response string `json:"response"`
-		Done     bool   `json:"done"`
-	}
-
+	var result models.LLMResult
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", fmt.Errorf("failed to decode response: %w", err)
 	}

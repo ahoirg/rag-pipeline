@@ -2,11 +2,9 @@ package services
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"rag-pipeline/db"
 	"rag-pipeline/models"
-	"slices"
 	"time"
 )
 
@@ -15,35 +13,29 @@ type RAGService struct {
 	Embedder  *OllamaEmbedder
 	QdrantDB  *db.QdrantDatabase
 	Generator *LLMService
+	Config    *models.Config
 }
 
-// TODO: move to config file
-const (
-	chunkSize              = 300
-	chunkOverlap           = 30
-	qdrantHost             = "localhost"
-	qdrantPort             = 6334
-	embedindModelDimention = 768 // Nomic embedder dimension
-	embeddingModel         = "nomic-embed-text"
-	llomaBaseURL           = "http://localhost:11434"
-)
-
 // NewRAGService initializes the RAG service by setting up the Qdrant client and preparing the vector database
-func NewRAGService(collectionName string) *RAGService {
+func NewRAGService(config *models.Config, collectionName string) *RAGService {
 	return &RAGService{
-		Chunker:  NewChunker(chunkSize, chunkOverlap),
-		Embedder: NewOllamaEmbedder(llomaBaseURL, embeddingModel),
-		QdrantDB: db.NewQdrantDatabase(qdrantHost, qdrantPort, collectionName),
-		Generator: NewLLMService(llomaBaseURL, &http.Client{
+		Chunker:  NewChunker(config.Chunk.Size, config.Chunk.Overlap),
+		Embedder: NewOllamaEmbedder(config.Ollama.BaseURL, config.Embedding.ModelName, config.Embedding.Endpoint),
+		Generator: NewLLMService(config.Ollama.BaseURL, config.Generator.Endpoint, config.Generator.ModelName, &http.Client{
 			Timeout: 5 * time.Minute,
 		}),
+		QdrantDB: db.NewQdrantDatabase(config.Qdrant.Host, config.Qdrant.Port, collectionName),
+		Config:   config,
 	}
 }
 
+// StoreData sends the given text data to the vector database
 func (r *RAGService) StoreData(text string) error {
 	return r.prepareVectorDatabase(text)
 }
 
+// GenerateResponse retrieves the most relevant chunks for the given question,
+// sends them with the query to the generator model and returns the generated answer
 func (r *RAGService) GenerateResponse(question string) (string, []string, error) {
 	retrievalResult, err := r.RetrieveRelevantChunks(question, 3)
 	if err != nil {
@@ -60,76 +52,14 @@ func (r *RAGService) GenerateResponse(question string) (string, []string, error)
 	return generatedResponse, chunks, err
 }
 
+// GenerateResponseWithoutChunks sends the given question directly to the the generator model
+// it returns the generated answer
 func (r *RAGService) GenerateResponseWithoutChunks(question string) (string, error) {
 	return r.Generator.GenerateResponseWithoutChunks(question)
 }
 
-// prepareVectorDatabase checks if the required collection exists in Qdrant
-// if not, it creates collection and insert chunked and embedded data
-func (r *RAGService) prepareVectorDatabase(text string) error {
-
-	collections, err := r.QdrantDB.GetQdrantCollectionNames()
-	if err != nil {
-		log.Printf("Error: %v", err)
-		return err
-	}
-
-	log.Println("rag_service.prepareVectorDatabase: %w", len(collections))
-	if len(collections) > 0 && slices.Contains(collections, r.QdrantDB.CollectionName) {
-		log.Println("NOT RECORDED IN THE DATABASE")
-		return nil
-	}
-
-	chunks, embeddings, err := r.chunkandEmbed(text)
-	if err != nil {
-		log.Printf("Error: %v", err)
-		return err
-	}
-
-	err = r.QdrantDB.CreateQdrantCollection(uint64(embedindModelDimention))
-	if err != nil {
-		log.Printf("Error: %v", err)
-		return err
-	}
-
-	err = r.QdrantDB.AddVectorsToQdrant(chunks, embeddings)
-	if err != nil {
-		log.Printf("Error: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-// chunkandEmbed loads the document, chunks it and generates embeddings for the chunks
-func (r *RAGService) chunkandEmbed(text string) ([]models.Chunk, [][]float32, error) {
-
-	chunks := r.Chunker.ChunkText(text)
-	if len(chunks) == 0 {
-		return nil, nil, fmt.Errorf("chunking failed: no chunks were created from the given text")
-	}
-
-	chunk_texts := make([]string, len(chunks)) // 'make' for fast, direct indext assignment and no allocation
-	for i, chunk := range chunks {
-		chunk_texts[i] = chunk.Text
-	}
-
-	//for test
-	//jsonData, _ := json.MarshalIndent(chunks, "", "  ")
-	//os.WriteFile("data/chunks", jsonData, 0644)
-	//
-
-	embeddings, err := r.Embedder.EmbedChunks(chunk_texts)
-	if err != nil {
-		log.Printf("Error: %v", err)
-		return nil, nil, err
-	}
-
-	return chunks, embeddings, nil
-}
-
+// RetrieveRelevantChunks retrieves the most relevant chunks for the given query
 func (r *RAGService) RetrieveRelevantChunks(query string, topK int) ([]models.RetrievalResult, error) {
-	//log.Println("RetrieveRelevantChunks is running...")
 
 	queryEmbedding, err := r.Embedder.EmbedQuery(query)
 	if err != nil {
@@ -149,11 +79,42 @@ func (r *RAGService) RetrieveRelevantChunks(query string, topK int) ([]models.Re
 			Score:   point.Score,
 		})
 	}
-	/*
-		for _, a := range results {
-			println(a.ChunkID)
-		}
-	*/
-	//log.Println("RetrieveRelevantChunks was DONE!")
+
 	return results, nil
+}
+
+// prepareVectorDatabase insert chunked and embedded data to db
+func (r *RAGService) prepareVectorDatabase(text string) error {
+
+	//Chunks
+	chunks := r.Chunker.ChunkText(text)
+	if len(chunks) == 0 {
+		return fmt.Errorf("rag_serivece| prepareVectorDatabase: chunking failed: no chunks were created from the given text")
+	}
+
+	//prepare chunks for embeddings
+	chunk_texts := make([]string, len(chunks)) // 'make' for fast, direct indext assignment and no allocation
+	for i, chunk := range chunks {
+		chunk_texts[i] = chunk.Text
+	}
+
+	//embedding
+	embeddings, err := r.Embedder.EmbedChunks(chunk_texts)
+	if err != nil {
+		return fmt.Errorf("rag_serivece| prepareVectorDatabase: %w", err)
+	}
+
+	//TODO  handle it in db depending on qdrantdb client
+	err = r.QdrantDB.CreateQdrantCollection(uint64(r.Config.Embedding.ModelDimension))
+	if err != nil {
+		return fmt.Errorf("rag_serivece| prepareVectorDatabase: %w", err)
+	}
+
+	//stores vectors in db
+	err = r.QdrantDB.AddVectorsToQdrant(chunks, embeddings)
+	if err != nil {
+		return fmt.Errorf("rag_serivece| prepareVectorDatabase: %w", err)
+	}
+
+	return nil
 }

@@ -22,10 +22,6 @@ func NewQdrantDatabase(qdrantHost string, qdrantPort int, collectionName string)
 		log.Fatalf("Failed to create Qdrant client: %v", err)
 	}
 
-	// It creates only the client,
-	// but the collection has not been created in the DB yet
-	// it will create first insert data
-
 	return &QdrantDatabase{
 		Client:         client,
 		CollectionName: collectionName,

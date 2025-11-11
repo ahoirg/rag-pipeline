@@ -1,4 +1,4 @@
-package evaluation
+package utils
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ func LoadDocument(path string) (string, error) {
 	return text, nil
 }
 
+// CalculateTruePositive calculates the TP value for metrics like Precision and Recall
 func CalculateTruePositive(expected []int, retrieval []int) int {
 	var truePositive int = 0
 
@@ -39,6 +40,7 @@ func CalculateTruePositive(expected []int, retrieval []int) int {
 	return truePositive
 }
 
+// Average gets average of float64Slice
 func Average(values []float64) float64 {
 	if len(values) == 0 {
 		return 0.0

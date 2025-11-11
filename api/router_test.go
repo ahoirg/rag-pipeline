@@ -9,7 +9,7 @@ import (
 func TestCreateRAGRouter(t *testing.T) {
 
 	// Initialize dependencies before creating router
-	InitApiDependencies()
+	//InitApiDependencies()
 
 	// Create the router
 	r := CreateRAGRouter()
