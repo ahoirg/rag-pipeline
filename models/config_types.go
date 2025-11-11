@@ -3,13 +3,17 @@ package models
 type Config struct {
 	Api struct {
 		Port           string `yaml:"port"`
-		CollectionName string `yaml:"api_collection"`
+		CollectionName string `yaml:"collection_name"`
 	} `yaml:"base_api"`
 
 	Chunk struct {
 		Size    int `yaml:"size"`
 		Overlap int `yaml:"overlap"`
 	} `yaml:"chunk"`
+
+	Retrieval struct {
+		TopK int `yaml:"top_k"`
+	} `yaml:"retrieval"`
 
 	Qdrant struct {
 		Host string `yaml:"host"`

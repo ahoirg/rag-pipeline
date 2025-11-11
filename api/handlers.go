@@ -14,9 +14,19 @@ var ragService *services.RAGService
 var evaluator *evaluation.Evaluator
 
 // InitService initializes the api service
-func InitService(config *models.Config) {
-	ragService = services.NewRAGService(config, config.Api.CollectionName)
-	evaluator = evaluation.NewEvaluator(config)
+func InitService(config *models.Config) error {
+	var err error
+	ragService, err = services.NewRAGService(config, config.Api.CollectionName)
+	if err != nil {
+		return err
+	}
+
+	evaluator, err = evaluation.NewEvaluator(config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // PingHandler handles the health check endpoint

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"rag-pipeline/models"
+	"time"
 )
 
 type LLMService struct {
@@ -15,11 +16,12 @@ type LLMService struct {
 }
 
 // NewLLMService creates and returns a new LLMService
-func NewLLMService(baseUrl string, endpoint string, modelName string, Client *http.Client) *LLMService {
+func NewLLMService(baseUrl string, endpoint string, modelName string) *LLMService {
 	return &LLMService{
 		EndPoint:  baseUrl + endpoint,
 		ModelName: modelName,
-		Client:    Client,
+		Client: &http.Client{
+			Timeout: 120 * time.Second},
 	}
 }
 

@@ -6,6 +6,9 @@ chunk:
   size: 300
   overlap: 30
 
+retrieval:
+  top_k: 2
+
 qdrant:
   host: "localhost"
   port: 6334

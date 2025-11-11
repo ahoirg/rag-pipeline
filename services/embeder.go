@@ -24,7 +24,7 @@ func NewOllamaEmbedder(baseUrl string, modelName string, endpoint string) *Ollam
 		Endpoint: endpoint,
 		Model:    modelName,
 		Client: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 60 * time.Second,
 		},
 	}
 }

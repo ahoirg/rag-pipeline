@@ -24,7 +24,9 @@ func main() {
 	}
 
 	// Initialize API dependencies
-	api.InitApiDependencies(&config)
+	if err := api.InitApiDependencies(&config); err != nil {
+		log.Fatalf("main.go|initialization to start: %v", err)
+	}
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)    // Request logging

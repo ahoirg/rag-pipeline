@@ -30,6 +30,9 @@ func CreateRAGRouter() *chi.Mux {
 }
 
 // InitApiDependencies initializes all services required by the API layer
-func InitApiDependencies(config *models.Config) {
-	InitService(config)
+func InitApiDependencies(config *models.Config) error {
+	if err := InitService(config); err != nil {
+		return err
+	}
+	return nil
 }

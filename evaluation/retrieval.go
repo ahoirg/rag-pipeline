@@ -14,11 +14,9 @@ func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*models.Retr
 		return nil, err
 	}
 
-	var topChunkint int = 2 // TODO pass parameter and get it from config
 	var testCaseResults []models.RetrievalTestCaseResult
-
 	for _, data := range evalData {
-		retrievedChunks, err := eval.RAGService.RetrieveRelevantChunks(data.Question, topChunkint)
+		retrievedChunks, err := eval.RAGService.RetrieveRelevantChunks(data.Question, eval.Config.Retrieval.TopK)
 		if err != nil {
 			return nil, err
 		}

@@ -17,14 +17,19 @@ type Evaluator struct {
 }
 
 // NewChunker creates and returns a new Evaluator
-func NewEvaluator(config *models.Config) *Evaluator {
+func NewEvaluator(config *models.Config) (*Evaluator, error) {
+	ragService, err := services.NewRAGService(config, config.Evaluation.CollectionName)
+	if err != nil {
+		return nil, fmt.Errorf("evaluation.go| NewEvaluator: initialization error %w", err)
+	}
+
 	return &Evaluator{
-		RAGService:                 services.NewRAGService(config, config.Evaluation.CollectionName),
+		RAGService:                 ragService,
 		RetrievalEvaluationResult:  nil,   //
 		GenerationEvaluationResult: nil,   //
 		IsIntialized:               false, // insert evaluation data into the database only once
 		Config:                     config,
-	}
+	}, nil
 }
 
 // GetRetrievalEvaluateResult returns the retrieval evaluation result

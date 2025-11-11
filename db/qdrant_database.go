@@ -16,16 +16,16 @@ type QdrantDatabase struct {
 }
 
 // NewQdrantDatabase creates and returns a new QdrantDatabase instance
-func NewQdrantDatabase(qdrantHost string, qdrantPort int, collectionName string) *QdrantDatabase {
+func NewQdrantDatabase(qdrantHost string, qdrantPort int, collectionName string) (*QdrantDatabase, error) {
 	client, err := newQdrantClient(qdrantHost, qdrantPort)
 	if err != nil {
-		log.Fatalf("Failed to create Qdrant client: %v", err)
+		return nil, fmt.Errorf("failed to create Qdrant client: %w", err)
 	}
 
 	return &QdrantDatabase{
 		Client:         client,
 		CollectionName: collectionName,
-	}
+	}, nil
 }
 
 // GetQdrantCollectionNames gets the names of all collections in the Qdrant database
@@ -39,13 +39,20 @@ func (qdb *QdrantDatabase) CollectionExists() (bool, error) {
 
 // CreateQdrantCollection creates a new collection in Qdrant with the collectionName and vector size
 func (qdb *QdrantDatabase) CreateQdrantCollection(vectorSize uint64) error {
-	return qdb.Client.CreateCollection(context.Background(), &qdrant.CreateCollection{
+	err := qdb.Client.CreateCollection(context.Background(), &qdrant.CreateCollection{
 		CollectionName: qdb.CollectionName,
 		VectorsConfig: qdrant.NewVectorsConfig(&qdrant.VectorParams{
 			Size:     vectorSize,
 			Distance: qdrant.Distance_Cosine,
 		}),
 	})
+
+	if err != nil {
+		return fmt.Errorf("collection not created %w", err)
+	}
+
+	log.Println("Collection created: ", qdb.CollectionName)
+	return nil
 }
 
 // AddVectorsToQdrant adds the given chunks and their corresponding embeddings to the collection
