@@ -125,7 +125,7 @@ func (r *RAGService) storeData(text string) error {
 	//embedding
 	embeddings, err := r.Embedder.EmbedChunks(chunk_texts)
 	if err != nil {
-		return fmt.Errorf("rag_serivece| prepareVectorDatabase: %w", err)
+		return fmt.Errorf("rag_serivece.go| storeData: Fail EmbedChunks : %w", err)
 	}
 
 	//stores vectors in db

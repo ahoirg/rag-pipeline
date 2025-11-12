@@ -10,7 +10,7 @@ retrieval:
   top_k: 4
 
 qdrant:
-  host: "localhost"
+  host: "qdrant"
   port: 6334
 
 embedding:
@@ -19,10 +19,10 @@ embedding:
   endpoint: "/api/embed"
 
 ollama:
-  base_url: "http://localhost:11434"
+  base_url: "http://ollama:11434"
 
 generator:
-  model_name: "llama3.2:3b" # "tinyllama" "llama3.2:3b" "phi3:mini"
+  model_name: "tinyllama" # "tinyllama" "llama3.2:3b" "phi3:mini"
   endpoint: "/api/generate"
 
 evaluation:
