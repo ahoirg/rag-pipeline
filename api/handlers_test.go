@@ -30,7 +30,7 @@ func TestPingHandler(t *testing.T) {
 	}
 
 	// Decode the JSON response body into a map
-	var response map[string]interface{}
+	var response map[string]any
 	err := json.NewDecoder(w.Body).Decode(&response)
 	if err != nil {
 		t.Fatalf("Failed to decode response: %v", err)

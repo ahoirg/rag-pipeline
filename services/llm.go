@@ -41,16 +41,18 @@ func (llm *LLMService) GenerateResponse(question string, chunks []string) (strin
 		data += fmt.Sprintf("Chunk %d: %s\n\n", i+1, chunk)
 	}
 
-	prompt := fmt.Sprintf("Using this data: %s. Respond to this prompt: %s",
+	prompt := fmt.Sprintf(`We have provided context information below.
+---------------------
+%s
+---------------------
+Answer the question with only the essential information. Just write the answer to the Question
+Question: %s
+Answer: \
+`,
 		data,
 		question,
 	)
-	/*
-		prompt := fmt.Sprintf("Answer the question using ONLY the information from this context: %s.Respond to this request concisely and directly: %s",
-			data,
-			question,
-		)
-	*/
+
 	generatedResponse, err := llm.generateResponse(prompt)
 	return generatedResponse, err
 }
@@ -62,6 +64,9 @@ func (llm *LLMService) generateResponse(prompt string) (string, error) {
 		Model:  llm.ModelName,
 		Prompt: prompt,
 		Stream: false,
+		Options: map[string]any{
+			"temperature": 0.1,
+		},
 	}
 
 	jsonData, err := json.Marshal(reqBody)

@@ -22,7 +22,7 @@ ollama:
   base_url: "http://localhost:11434"
 
 generator:
-  model_name: "tinyllama"
+  model_name: "tinyllama" # "tinyllama" "llama3.2:3b"
   endpoint: "/api/generate"
 
 evaluation:
