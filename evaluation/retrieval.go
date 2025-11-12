@@ -8,6 +8,7 @@ import (
 	"rag-pipeline/utils"
 )
 
+// EvaluateRetrieval runs the full evaluation pipeline for retrieval evaluation
 func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*models.RetrievalEvaluationResult, error) {
 	evalData, err := loadQuestions(retrievalDataPath)
 	if err != nil {
@@ -42,6 +43,8 @@ func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*models.Retr
 	return calculateRetrievalMetricResults(testCaseResults), nil
 }
 
+// calculateRetrievalMetricResults computes precision, recall, and F1 scores for each retrieval test case
+// and return them as a models.RetrievalEvaluationResult
 func calculateRetrievalMetricResults(testCaseResults []models.RetrievalTestCaseResult) *models.RetrievalEvaluationResult {
 	var precisions []float64
 	var recalls []float64
@@ -82,6 +85,7 @@ func calculateRetrievalMetricResults(testCaseResults []models.RetrievalTestCaseR
 	}
 }
 
+// loadQuestions reads QA data from a JSON file and returns it as a slice of models.RetrievalEvalData
 func loadQuestions(filePath string) ([]models.RetrievalEvalData, error) {
 	jsonString, err := utils.LoadDocument(filePath)
 	if err != nil {

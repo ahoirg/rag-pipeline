@@ -12,7 +12,6 @@ type Evaluator struct {
 	RAGService                 *services.RAGService
 	RetrievalEvaluationResult  *models.RetrievalEvaluationResult
 	GenerationEvaluationResult *models.GenerationEvaluationResult
-	IsIntialized               bool
 	Config                     *models.Config
 }
 
@@ -24,11 +23,14 @@ func NewEvaluator(config *models.Config) (*Evaluator, error) {
 	}
 
 	return &Evaluator{
-		RAGService:                 ragService,
-		RetrievalEvaluationResult:  nil,   //
-		GenerationEvaluationResult: nil,   //
-		IsIntialized:               false, // insert evaluation data into the database only once
-		Config:                     config,
+		RAGService: ragService,
+
+		// Stores results to avoid recalculating on the same data with
+		// the same parameters once the evaluation has been performed
+		RetrievalEvaluationResult:  nil,
+		GenerationEvaluationResult: nil,
+
+		Config: config,
 	}, nil
 }
 
@@ -76,7 +78,10 @@ func (eval *Evaluator) GetGenerationEvaluateResult() (*models.GenerationEvaluati
 
 // prepareEvalData loads the evaluation source data and stores it in the vector database
 func (eval *Evaluator) prepareEvalData() error {
-	if eval.IsIntialized {
+
+	// If either of the evaluations has already been computed,
+	// it means the test data has been loaded previously.
+	if eval.RetrievalEvaluationResult != nil || eval.GenerationEvaluationResult != nil {
 		return nil
 	}
 
@@ -89,6 +94,5 @@ func (eval *Evaluator) prepareEvalData() error {
 		return fmt.Errorf("evaluation.go|failed prepareQdrantDB: %w", err)
 	}
 
-	eval.IsIntialized = true
 	return nil
 }

@@ -9,23 +9,24 @@ import (
 	"github.com/drewlanenga/govector"
 )
 
+// EvaluateGeneration runs the full evaluation pipeline for generated responses
 func (eval *Evaluator) EvaluateGeneration(generationDataPath string) (*models.GenerationEvaluationResult, error) {
-	qas, err := eval.getGeneratorQA(generationDataPath)
+	qas, err := eval.loadGeneratorQA(generationDataPath)
 	if err != nil {
 		return nil, err
 	}
 
-	generationCases, err := eval.GetGeneratorResponse(qas)
+	generationCases, err := eval.getGeneratorResponse(qas)
 	if err != nil {
 		return nil, err
 	}
 
-	err = eval.GetEmbeddedResults(&generationCases)
+	err = eval.getEmbeddedResults(&generationCases)
 	if err != nil {
 		return nil, err
 	}
 
-	err = eval.CalculateSimilarityScores(&generationCases)
+	err = eval.calculateSimilarityScores(&generationCases)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,8 @@ func (eval *Evaluator) EvaluateGeneration(generationDataPath string) (*models.Ge
 	return result, nil
 }
 
-func (eval *Evaluator) GetGeneratorResponse(qaData []models.QA) ([]models.GenerationEvaluationCase, error) {
+// getGeneratorResponse generates answers for each QA pair and returns them with generated answers
+func (eval *Evaluator) getGeneratorResponse(qaData []models.QA) ([]models.GenerationEvaluationCase, error) {
 	var evaluationCase []models.GenerationEvaluationCase
 
 	for _, qa := range qaData {
@@ -63,7 +65,8 @@ func (eval *Evaluator) GetGeneratorResponse(qaData []models.QA) ([]models.Genera
 	return evaluationCase, nil
 }
 
-func (eval *Evaluator) GetEmbeddedResults(results *[]models.GenerationEvaluationCase) error {
+// getEmbeddedResults generates embeddings for ground truths and generated answers
+func (eval *Evaluator) getEmbeddedResults(results *[]models.GenerationEvaluationCase) error {
 	var groundTruths []string
 	var generatedAnswers []string
 
@@ -90,13 +93,10 @@ func (eval *Evaluator) GetEmbeddedResults(results *[]models.GenerationEvaluation
 	return nil
 }
 
-func (eval *Evaluator) CalculateSimilarityScores(results *[]models.GenerationEvaluationCase) error {
+// calculateSimilarityScores computes cosine similarity between ground truth and generated embeddings
+func (eval *Evaluator) calculateSimilarityScores(results *[]models.GenerationEvaluationCase) error {
 	for i := range *results {
 
-		// TODO
-		// maybe we can store embedding in float64 ?
-		// need to analyze
-		// writemanuel ???
 		vec1 := make([]float64, len((*results)[i].GroundTruthEmbedding))
 		vec2 := make([]float64, len((*results)[i].GeneratedEmbedding))
 
@@ -115,7 +115,8 @@ func (eval *Evaluator) CalculateSimilarityScores(results *[]models.GenerationEva
 	return nil
 }
 
-func (eval *Evaluator) getGeneratorQA(generationDataPath string) ([]models.QA, error) {
+// loadGeneratorQA reads QA data from a JSON file and returns it as a slice of models.QA
+func (eval *Evaluator) loadGeneratorQA(generationDataPath string) ([]models.QA, error) {
 
 	text, err := utils.LoadDocument(generationDataPath)
 	if err != nil {

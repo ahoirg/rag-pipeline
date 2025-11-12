@@ -57,6 +57,7 @@ func Average(values []float64) float64 {
 	return total / float64(len(values))
 }
 
+// StoreChunk stores chunks in the root directory as a json
 func StoreChunk(chunk *[]models.Chunk) error {
 	jsonChunk, err := json.Marshal(chunk)
 	if err != nil {
