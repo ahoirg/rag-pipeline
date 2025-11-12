@@ -92,6 +92,6 @@ func loadQuestions(filePath string) ([]models.RetrievalEvalData, error) {
 	if err := json.Unmarshal([]byte(jsonString), &retrievalEvalData); err != nil {
 		return nil, fmt.Errorf("retrieval.go| failed to LoadQuestions JSON: %w", err)
 	}
-
+	println("retrieval.go| Questions were loaded!")
 	return retrievalEvalData, nil
 }

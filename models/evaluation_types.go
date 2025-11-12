@@ -32,8 +32,9 @@ type GenerationEvaluationCase struct {
 	Question             string
 	GroundTruth          string
 	GeneratedAnswer      string
-	GroundTruthEmbedding []float32
-	GeneratedEmbedding   []float32
+	GroundTruthEmbedding []float32 `json:"-"`
+	GeneratedEmbedding   []float32 `json:"-"`
+	SourceChunks         []string
 	SimilarityScore      float64
 }
 

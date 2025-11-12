@@ -47,7 +47,7 @@ func (eval *Evaluator) GetGeneratorResponse(qaData []models.QA) ([]models.Genera
 	var evaluationCase []models.GenerationEvaluationCase
 
 	for _, qa := range qaData {
-		generatedAnswer, _, err := eval.RAGService.GenerateResponse(qa.Question)
+		generatedAnswer, chunks, err := eval.RAGService.GenerateResponse(qa.Question)
 		if err != nil {
 			return nil, fmt.Errorf("generation.go |failed to generate response: %w", err)
 		}
@@ -56,6 +56,7 @@ func (eval *Evaluator) GetGeneratorResponse(qaData []models.QA) ([]models.Genera
 			Question:        qa.Question,
 			GroundTruth:     qa.Answer,
 			GeneratedAnswer: generatedAnswer,
+			SourceChunks:    chunks,
 		})
 	}
 

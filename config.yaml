@@ -4,10 +4,10 @@ base_api:
   
 chunk:
   size: 300
-  overlap: 30
+  overlap: 55
 
 retrieval:
-  top_k: 2
+  top_k: 4
 
 qdrant:
   host: "localhost"
@@ -22,7 +22,7 @@ ollama:
   base_url: "http://localhost:11434"
 
 generator:
-  model_name: "tinyllama" # "tinyllama" "llama3.2:3b"
+  model_name: "llama3.2:3b" # "tinyllama" "llama3.2:3b" "phi3:mini"
   endpoint: "/api/generate"
 
 evaluation:
