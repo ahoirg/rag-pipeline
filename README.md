@@ -91,6 +91,16 @@ To utilize the Rag Pipeline in a Docker container, follow these simple steps:
     go mod download
     go run main.go
   ```
+⚠️ Local Setup Note: You need to set both the Qdrant and Ollama base URLs to localhost for the pipeline to run locally.
+```yaml
+qdrant:
+  host: "localhost" <--
+  port: 6334
+
+ollama:
+  base_url: "http://localhost:11434" <--
+```
+
 ## 4) API Overview
 
 | Method | Endpoint | Description |
