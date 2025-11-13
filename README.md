@@ -154,7 +154,7 @@ For retrieval tests, when the chunker changes, gold chunks are manually created 
 >Each question–answer pair also contains information about the relevant chunks. Since these relevant chunks typically consist of only a single chunk, increasing the number of retrieved chunks (top-k) causes the F1 score to drop. Therefore, the recall metric is more important for our use case. Of course, to avoid incorrect or irrelevant information, precision and F1 should also be high.
 >However, this limitation of the dataset can be handled through a customized prompt.
 
-### First Evaluation
+### First Evaluation (v0.0.1)
 **Strategy**: split the text into chunks with sliding window approach --- **Chunk Size**: 300 words --- **Overlap** : 30 words (%10 overlap) --- **Top-K** : 2
 
 <b>Retrieval Evaluation</b><br>
@@ -184,7 +184,7 @@ For retrieval tests, when the chunker changes, gold chunks are manually created 
 </tr>
 </table>
 
-### Last Evaluation
+### Last Evaluation (v0.0.2)
 
 **Strategy**: split the text into chunks with sliding window approach and ***customized prompt*** --- **Chunk Size**: 300 words --- **Overlap** : 55 words (%18 overlap) --- **Top-K** : 4
 
