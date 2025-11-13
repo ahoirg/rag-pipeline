@@ -112,6 +112,37 @@ ollama:
 | **POST** | `/api/ask` | Full RAG workflow: retrieves relevant context and generates a final answer |
 | **POST** | `/api/ask-directly` | Generates an answer directly without performing retrieval|
 
+**curl Examples**
+``` curl
+curl --location 'http://localhost:8080/api/ping' \
+--header 'Content-Type: application/json'
+```
+``` curl
+curl --location 'http://localhost:8080/api/evaluation/retrieval' \
+--header 'Content-Type: application/json'
+```
+``` curl
+curl --location 'http://localhost:8080/api/evaluation/generation' \
+--header 'Content-Type: application/json'
+```
+``` curl
+curl --location 'http://localhost:8080/api/storebook' \
+--form 'file=@"/C:/Users/ozdag/OneDrive/Desktop/treasure_island.txt"'
+```
+``` curl
+curl --location 'http://localhost:8080/api/ask' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "What does the treasure map point to?"
+  }'
+```
+``` curl
+curl --location 'http://localhost:8080/api/ask-directly' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "What does the treasure map point to?"
+  }'
+```
 ## 5) Development Decisions
 We aimed to create a modular and flexible back-end and RAG pipeline. It  helps make it easier to implement future changes as the project grows.
 
