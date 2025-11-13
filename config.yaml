@@ -22,7 +22,7 @@ ollama:
   base_url: "http://ollama:11434"
 
 generator:
-  model_name: "tinyllama" # "tinyllama" "llama3.2:3b" "phi3:mini"
+  model_name: "llama3.2:3b" # "tinyllama" "llama3.2:3b" "phi3:mini"
   endpoint: "/api/generate"
 
 evaluation:
