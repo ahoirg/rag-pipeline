@@ -73,9 +73,9 @@ To utilize the Rag Pipeline in a Docker container, follow these simple steps:
 | **Qdrant** | latest |
 | **Ollama** | latest |
 | **Embedding Model** (`nomic-embed-text`) | latest |
-| (*)**Generator Models** (`tinyllama`) | TinyLlama-1.1B |
+| (*)**Generator Models** (`llama3.2:3b`) | llama3.2:3b |
 
-> (*) Optional models: `llama3.2:3b`, `phi3:mini`, or any other model available in your local Ollama installation.
+> (*) Optional models: `phi3:mini`, `tinyllama` or any other model available in your local Ollama installation.
 
 ### Prerequisites
   -All dependencies must be ready on the device
