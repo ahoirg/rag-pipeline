@@ -9,7 +9,7 @@ It is a modular Retrieval‑Augmented Generation (RAG) pipeline written in Go. I
 - [3.2 Local Usage Instructions](#32-local-usage-instructions)
 - [4. API Overview](#4-api-overview)
 - [5. Development Decisions](#5-development-decisions)
-- [6. Pipeline Evaluation & Improvements](#6-Pipeline-Evaluation-&-Improvements)
+- [6. Pipeline Evaluation and Improvements](#6-pipeline-evaluation-and-improvements)
 - [7. Future Improvements](#7-future-improvements)
 
 ---
@@ -113,14 +113,55 @@ ollama:
 | **POST** | `/api/ask-directly` | Generates an answer directly without performing retrieval|
 
 ## 5) Development Decisions
-## 6) Pipeline Evaluation & Improvements
+We aimed to create a modular and flexible back-end and RAG pipeline. It  helps make it easier to implement future changes as the project grows.
+
+### Backend
+We used chi-go as the router because it makes managing API endpoints straightforward. It is fast, lightweight and provides useful middleware support. Chi also includes middleware for logging API requests and preventing crashes that may occur during request handling. Also it validates HTTP methods and returns appropriate status codes.
+
+Folder Structure 📁
+```yaml
+├─ api/        # HTTP handlers (REST endpoints)
+├─ db/         # Database layer
+├─ eval_data/  # Labeled QA/eval JSON files ( for the evaluation of the rag papline, loaded automatically)
+├─ evaluation/ # Evaluation logic (retrieval/generation metrics)
+├─ models/     # Core data models (Chunk, Document, Embedding, etc.)
+├─ services/   # Business logic: chunker, embedder, retriever, generator
+├─ utils/      # Shared utilities 
+├─ config.yaml # Configuration file
+├─ main.go     # Application entrypoint
+```
+
+### RAG Pipeline
+
+We use a main rag_service struct that manages the chunker, embedder, generator and communication with the vector database. This structure keeps each component modular. In the future, any part of the pipeline can be modified by simply updating the function bodies inside the corresponding service file, without affecting the rest of the system.
+
+• Chunker: We implement word-based chunking using a sliding-window technique without relying on external frameworks. For sentence-aware chunking, we utilize existing Go libraries.
+
+• Embedder: We support all embedding models that are based on Ollama. By default, we recommend using "nomic-embed-text", as it has a relatively small size and is ideal for the chunk lengths used in this project.
+
+• Generator: We support all Ollama-based generator models. By default, we recommend "llama3.2:3b" (2GB, 128K context length), which easily handles our chunk token requirements. For a more lightweight option, TinyLlama (637MB) can be used, but it will fail when the number of chunks exceeds 4 due to its smaller context window.
+> Ollama was chosen because it can be installed locally, requires no internet connection after initial setup and provides quick access to multiple models once integrated.
+
+• Vector Database: Qdrant was chosen as the vector database because it can be easily integrated with Go and run locally. We use dense vector retrieval with cosine similarity. However, Qdrant also supports dense, sparse and hybrid search (multipvector) approaches.This flexibility allows us to quickly integrate other retrieval approaches into our system. [For more detail.](https://qdrant.tech/documentation/concepts/vectors/)
+
+## 6) Pipeline Evaluation and Improvements
+We prepared the evaluation data from the paragraph about the University of Notre Dame in the SQuAD 2.0 training set.
+
+Retrieval and generation tests consist of 22 question-answer pairs. 
+For retrieval tests, when the chunker changes, gold chunks are manually created with AI assistance for each chunking approach.
+
+⚠️⚠️⚠️
+>Each question–answer pair also contains information about the relevant chunks. Since these relevant chunks typically consist of only a single chunk, increasing the number of retrieved chunks (top-k) causes the F1 score to drop. Therefore, the recall metric is more important for our use case. Of course, to avoid incorrect or irrelevant information, precision and F1 should also be high.
+>However, this limitation of the dataset can be handled through a customized prompt.
+
 ### First Evaluation
-Strategy:
+**Strategy**: split the text into chunks with sliding window approach --- **Chunk Size**: 300 words --- **Overlap** : 30 words (%10 overlap) --- **Top-K** : 2
+
+<b>Retrieval Evaluation</b><br>
 <table>
 <tr>
 <td>
 
-<b>Retrieval Evaluation</b><br>
 
 | Metric | Value |
 |--------|--------|
@@ -145,7 +186,7 @@ Strategy:
 
 ### Last Evaluation
 
-Strategy:
+**Strategy**: split the text into chunks with sliding window approach and ***customized prompt*** --- **Chunk Size**: 300 words --- **Overlap** : 55 words (%18 overlap) --- **Top-K** : 4
 
 <table>
 <tr>
@@ -173,6 +214,42 @@ Strategy:
 </td>
 </tr>
 </table>
+
+### Our analyses:
+We experimented with different chunking strategies such as Fixed-Length Chunking, Sentence-Based Chunking and Sliding Window Chunking. 
+In approaches where we did not **use overlap** (i.e., chunking without any sliding window), we consistently observed poor retrieval performance.
+
+For example, with Sentence-Based Chunking (chunk size: 5, overlap: 0, K = 2, using the new prompt), the results were:
+``` json
+{
+    "AvgPrecision": 0.136363636363636,
+    "AvgRecall": 0.25,   <-- important
+    "AvgF1": 0.174242424242424
+}
+```
+>The chunk and QA data used in the evaluation can be found under the path eval_data/previous_tests_data.zip/sources2
+
+Therefore, in our experiments, the overlap value was always set to a value greater than 0.
+In the Sentence-Based approach, the chunk sizes are not fixed. This situation can cause problems for models like TinyLLaMA and lead to exceeding the token limits expected by the model.
+While generator scores in the sentence-based approach appeared high, manual inspection showed that these similarities were misleading. The generated answers often did not contain the actual answer. They included only similar vocabulary. 
+
+Therefore we converted the texts into word slices and created chunks using a fixed number of words each time. We used cosine similarity for the retrieval step. In the future, we can make the retrieval better by using hybrid search or re-ranking methods. By changing the word overlap, chunk size, and top-k values, we achieved more stable and consistent results.
+
+###  Comparison of  "v0.0.1" vs "v0.0.1+new promt" vs "v0.0.2"
+| Version | Metric | Value | Generator | 
+|--------|--------|-----------|---------|
+|  v0.0.2 | Avg. Similarity Score (Cosine) | **0.556** | tinyllama     | 
+|  v0.0.2 |Avg. Similarity Score (Cosine) | **0.798** ⬆️| llama3.2:3b  |
+|  v0.0.2 |Avg. Similarity Score (Cosine) | **0.842** ⬆️| phi3:mini     |
+| ────────────── | ────────────── | ───────── | ───────── |
+|  v0.0.1+new promt | Avg. Similarity Score (Cosine) | **0.575** | tinyllama     | 
+|  v0.0.1+new promt |Avg. Similarity Score (Cosine) | **0.533** | llama3.2:3b  |
+|  v0.0.1+new promt |Avg. Similarity Score (Cosine) | **0.563** | phi3:mini     |
+| ────────────── | ────────────── | ───────── | ───────── |
+|  v0.0.1 | Avg. Similarity Score (Cosine) | **0.513** | tinyllama     | 
+|  v0.0.1 |Avg. Similarity Score (Cosine) | **0.548** | llama3.2:3b  |
+|  v0.0.1 |Avg. Similarity Score (Cosine) | **0.556** | phi3:mini     |
+
 
 ## 7) Future Improvements 
 ### Backend
