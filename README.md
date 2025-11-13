@@ -82,8 +82,8 @@ To utilize the Rag Pipeline in a Docker container, follow these simple steps:
   - Qdrant running locally (gRPC on localhost:6334) 
   - Ollama running locally with models:
     - `ollama pull nomic-embed-text`
-    -  `ollama pull tinyllama`
-    -  (optional) `ollama pull llama3.2:3b` or `ollama pull phi3:mini`
+    -  `ollama pull llama3.2:3b`
+    -  (optional) `ollama pull tinyllama` or `ollama pull phi3:mini`
     >Any non-default models you want to use at runtime must be configured in the config.yaml file.
 
 1) **Run the application** : Use the following commands to download dependencies and start the server.
