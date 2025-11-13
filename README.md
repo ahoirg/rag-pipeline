@@ -132,6 +132,7 @@ Strategy:
 </td>
 </tr>
 </table>
+
 ### Last Evaluation
 
 Strategy:
@@ -163,4 +164,20 @@ Strategy:
 </tr>
 </table>
 
-## 7) Future Improvements
+## 7) Future Improvements 
+### Backend
+1) **Testing**: Comprehensive unit tests, integration tests, end-to-ends should be added to improve reliability. Code coverage must be at least 80%.
+2) **Configurable Parameters**: Runtime parameters (e.g.: top_k, temperature, embedding models, generator models) should be made fully configurable via API requests.
+3) **CI/CD**: develop → main workflow with GitHub Actions. Merging to main triggers an automated build and a versioned release. It should create a package with version information.
+4) **Managing Logging**: Structured JSON logging should be implemented to increase observability.
+5) **File Architecture**: The project structure can be further organized to maintain clarity as the API continues to grow.  [For more detail.](https://medium.com/@smart_byte_labs/organize-like-a-pro-a-simple-guide-to-go-project-folder-structures-e85e9c1769c2)
+   
+### RAG Pipeline
+1) **Different Retrieval Approaches:** Future improvements should include support for sparse vector retrieval and hybrid search methods.
+2) **Benchmark Dataset:** A Gold Chunk test set should be created to evaluate different chunking strategies.
+3) **Reranker integration:** Implement two-stage retrieval. For example, retrieve 10 chunks using cosine similarity, then rerank with cross-encoder to select top 3.
+4) **Generation Optimization:** Different prompts should be tested to improve answer quality.
+
+
+
+
