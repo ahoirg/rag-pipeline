@@ -63,7 +63,7 @@ To utilize the Rag Pipeline in a Docker container, follow these simple steps:
 
 ## 3.2) Local Usage Instructions
 
-**Note**: If you are trying the project in a Docker container, you should skip this instruction. Proceed directly to [2. Using the Project](#2-using-the-project) section.  
+**Note**: If you are trying the project in a Docker container, you should skip this instruction. Proceed directly to [4. API Overview](#4-api-overview) section.  
 
 ### Dependencies
 
