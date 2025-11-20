@@ -302,26 +302,6 @@ For retrieval tests, when the chunker changes, gold chunks are manually created 
 </tr>
 </table>
 
-### Our analyses:
-We experimented with different chunking strategies such as Fixed-Length Chunking, Sentence-Based Chunking and Sliding Window Chunking. 
-In approaches where we did not **use overlap** (i.e., chunking without any sliding window), we consistently observed poor retrieval performance.
-
-For example, with Sentence-Based Chunking (chunk size: 5, overlap: 0, K = 2, using the new prompt), the results were:
-``` json
-{
-    "AvgPrecision": 0.136363636363636,
-    "AvgRecall": 0.25,   <-- important
-    "AvgF1": 0.174242424242424
-}
-```
->The chunk and QA data used in the evaluation can be found under the path eval_data/previous_tests_data.zip/sources2
-
-Therefore, in our experiments, the overlap value was always set to a value greater than 0.
-In the Sentence-Based approach, the chunk sizes are not fixed. This situation can cause problems for models like TinyLLaMA and lead to exceeding the token limits expected by the model.
-While generator scores in the sentence-based approach appeared high, manual inspection showed that these similarities were misleading. The generated answers often did not contain the actual answer. They included only similar vocabulary. 
-
-Therefore we converted the texts into word slices and created chunks using a fixed number of words each time. We used cosine similarity for the retrieval step. In the future, we can make the retrieval better by using hybrid search or re-ranking methods. By changing the word overlap, chunk size, and top-k values, we achieved more stable and consistent results.
-
 ###  Comparison of  "v0.0.1" vs "v0.0.1+new promt" vs "v0.0.2"
 | Version | Metric | Value | Generator | 
 |--------|--------|-----------|---------|
@@ -340,17 +320,17 @@ Therefore we converted the texts into word slices and created chunks using a fix
 
 ## 7) Future Improvements 
 ### Backend
-1) **Testing**: Comprehensive unit tests, integration tests, end-to-ends should be added to improve reliability. Code coverage must be at least 80%.
-2) **Configurable Parameters**: Runtime parameters (e.g.: top_k, temperature, embedding models, generator models) should be made fully configurable via API requests.
-3) **CI/CD**: develop → main workflow with GitHub Actions. Merging to main triggers an automated build and a versioned release. It should create a package with version information.
-4) **Managing Logging**: Structured JSON logging should be implemented to increase observability.
-5) **File Architecture**: The project structure can be further organized to maintain clarity as the API continues to grow.  [For more detail.](https://medium.com/@smart_byte_labs/organize-like-a-pro-a-simple-guide-to-go-project-folder-structures-e85e9c1769c2)
+- [ ] **Testing**: Comprehensive unit tests, integration tests, end-to-ends should be added to improve reliability.
+- [ ] **Configurable Parameters**: Runtime parameters (e.g.: top_k, temperature, embedding models, generator models) should be made fully configurable via API requests.
+- [ ] **CI/CD**: develop → main workflow with GitHub Actions. Merging to main triggers an automated build and a versioned release. It should create a package with version information.
+- [ ] **Managing Logging**: Structured JSON logging should be implemented to increase observability.
+- [x] **File Architecture**: The project structure can be further organized to maintain clarity as the API continues to grow.  [For more detail.](https://medium.com/@smart_byte_labs/organize-like-a-pro-a-simple-guide-to-go-project-folder-structures-e85e9c1769c2)
    
 ### RAG Pipeline
-1) **Different Retrieval Approaches:** Future improvements should include support for sparse vector retrieval and hybrid search methods.
-2) **Benchmark Dataset:** A Gold Chunk test set should be created to evaluate different chunking strategies.
-3) **Reranker integration:** Implement two-stage retrieval. For example, retrieve 10 chunks using cosine similarity, then rerank with cross-encoder to select top 3.
-4) **Generation Optimization:** Different prompts should be tested to improve answer quality.
+- [ ] **Different Retrieval Approaches:** Future improvements should include support for sparse vector retrieval and hybrid search methods.
+- [ ] **Benchmark Dataset:** A Gold Chunk test set should be created to evaluate different chunking strategies.
+- [ ] **Reranker integration:** Implement two-stage retrieval. For example, retrieve 10 chunks using cosine similarity, then rerank with cross-encoder to select top 3.
+- [ ] **Generation Optimization:** Different prompts should be tested to improve answer quality.
 
 
 
