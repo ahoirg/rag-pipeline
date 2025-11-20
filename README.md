@@ -149,17 +149,79 @@ We aimed to create a modular and flexible back-end and RAG pipeline. It  helps m
 ### Backend
 We used chi-go as the router because it makes managing API endpoints straightforward. It is fast, lightweight and provides useful middleware support. Chi also includes middleware for logging API requests and preventing crashes that may occur during request handling. Also it validates HTTP methods and returns appropriate status codes.
 
-Folder Structure 📁
-```yaml
-├─ api/        # HTTP handlers (REST endpoints)
-├─ db/         # Database layer
-├─ eval_data/  # Labeled QA/eval JSON files ( for the evaluation of the rag papline, loaded automatically)
-├─ evaluation/ # Evaluation logic (retrieval/generation metrics)
-├─ models/     # Core data models (Chunk, Document, Embedding, etc.)
-├─ services/   # Business logic: chunker, embedder, retriever, generator
-├─ utils/      # Shared utilities 
-├─ config.yaml # Configuration file
-├─ main.go     # Application entrypoint
+## 📁 Project Structure
+```
+rag-pipeline/
+│
+├── configs/
+│   ├── config.go                    # Configuration loader
+│   ├── config_dto.go                # Configuration DTOs
+│   ├── config.yaml                  # Development configuration
+│   └── config.prod.yaml             # Production configuration
+│
+├── internal/
+│   ├── delivery/                    
+│   │   ├── handlers/                # HTTP request handlers
+│   │   │   ├── handler.go
+│   │   │   ├── handler_dto.go
+│   │   │   ├── handler_test.go
+│   │   │   └── helper.go
+│   │   └── routers/                 # HTTP route definitions
+│   │       ├── router.go
+│   │       └── router_test.go
+│   │
+│   ├── services/                    # Business Logic Layer
+│   │   ├── chunkers/                # Text chunking service
+│   │   │   ├── chunker.go
+│   │   │   ├── chunker_dto.go
+│   │   │   └── helper.go
+│   │   ├── embedders/               # Text embedding service
+│   │   │   ├── embeder.go
+│   │   │   └── embedder_dto.go
+│   │   ├── generators/              # LLM generation service
+│   │   │   ├── generator.go
+│   │   │   └── generator_dto.go
+│   │   └── rag_manager/             # RAG service
+│   │       ├── rag_manager.go
+│   │       └── rag_manager_dto.go
+│   │
+│   ├── infrastructure/              
+│   │   └── vector_db/               # Vector database implementations
+│   │       └── qdrant_database.go
+│   │
+│   └── utils/                       # Shared utilities
+│       └── utils.go
+│
+├── evaluation/                      # RAG evaluation tools
+│   ├── evaluation.go                # Main evaluation logic
+│   ├── evaluation_dto.go            # Evaluation DTOs
+│   ├── generation.go                # Generation quality metrics
+│   └── retrieval.go                 # Retrieval quality metrics
+│
+├── eval_data/                       # Evaluation datasets
+│   ├── generation/
+│   │   └── notre_dame_qa_min.json
+│   ├── retrieval/
+│   │   ├── notre_dame_qa_chunks.json
+│   │   └── empty_source/
+│   └── notre_dame_contexts.txt
+│
+├── qdrant_storage/                  # Local Qdrant vector DB storage
+│   ├── collections/
+│   │   ├── api_collection/
+│   │   ├── eval_collection/
+│   │   └── treasure_island/
+│   └── raft_state.json
+│
+├── .env                             # Environment variables
+├── .gitignore                       # Git ignore rules
+├── docker-compose.yml               # Docker Compose configuration
+├── Dockerfile                       # Docker image definition
+├── go.mod                           # Go module definition
+├── go.sum                           # Go dependencies checksums
+├── LICENSE                          # Project license
+├── main.go                          # Legacy entry point
+└── README.md                        # Project documentation
 ```
 
 ### RAG Pipeline
