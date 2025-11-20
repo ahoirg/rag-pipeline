@@ -1,4 +1,4 @@
-package models
+package configs
 
 type Config struct {
 	Api struct {

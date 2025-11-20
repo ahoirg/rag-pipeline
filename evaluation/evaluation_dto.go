@@ -1,4 +1,17 @@
-package models
+package evaluation
+
+import (
+	"rag-pipeline/configs"
+	"rag-pipeline/internal/services/chunkers"
+	"rag-pipeline/internal/services/rag_manager"
+)
+
+type Evaluator struct {
+	RAGService                 *rag_manager.RAGService
+	RetrievalEvaluationResult  *RetrievalEvaluationResult
+	GenerationEvaluationResult *GenerationEvaluationResult
+	Config                     *configs.Config
+}
 
 type QA struct {
 	Question string `json:"question"`
@@ -6,9 +19,9 @@ type QA struct {
 }
 
 type RetrievalEvalData struct {
-	Question       string  `json:"question"`
-	ExpextedAnswer string  `json:"answer"`
-	RelevantChunks []Chunk `json:"relevantChunks"`
+	Question       string           `json:"question"`
+	ExpextedAnswer string           `json:"answer"`
+	RelevantChunks []chunkers.Chunk `json:"relevantChunks"`
 }
 
 type RetrievalTestCaseResult struct {

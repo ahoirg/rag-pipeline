@@ -1,11 +1,9 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
-	"rag-pipeline/models"
 )
 
 // LoadDocument reads the document and returns its content as a string
@@ -55,22 +53,4 @@ func Average(values []float64) float64 {
 	}
 
 	return total / float64(len(values))
-}
-
-// StoreChunk stores chunks in the root directory as a json
-func StoreChunk(chunk *[]models.Chunk) error {
-	jsonChunk, err := json.Marshal(chunk)
-	if err != nil {
-		return fmt.Errorf("error occurred during marshalling: %w", err)
-	}
-
-	file, err := os.Create("chunk.json")
-	if err != nil {
-		return fmt.Errorf("error occurred during file creating: %s", err.Error())
-	}
-
-	if _, err := file.Write(jsonChunk); err != nil {
-		return fmt.Errorf("error occurred during jsonChunk writing: %s", err.Error())
-	}
-	return nil
 }

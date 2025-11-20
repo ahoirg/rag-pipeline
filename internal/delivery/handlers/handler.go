@@ -1,37 +1,35 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"rag-pipeline/configs"
 	"rag-pipeline/evaluation"
-	"rag-pipeline/models"
-	"rag-pipeline/services"
+	"rag-pipeline/internal/services/rag_manager"
 	"time"
 )
 
-var ragService *services.RAGService
-var evaluator *evaluation.Evaluator
-
-// InitService initializes the api service
-func InitService(config *models.Config) error {
-	var err error
-	ragService, err = services.NewRAGService(config, config.Api.CollectionName)
+func NewHandler(config *configs.Config) (*Handler, error) {
+	ragService, err := rag_manager.NewRAGService(config, config.Api.CollectionName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	evaluator, err = evaluation.NewEvaluator(config)
+	evaluator, err := evaluation.NewEvaluator(config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &Handler{
+		RagService: ragService,
+		Evaluator:  evaluator,
+	}, nil
 }
 
 // PingHandler handles the health check endpoint
 func PingHandler(w http.ResponseWriter, r *http.Request) {
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   true,
 		Message:   "Api is working...",
 		Timestamp: time.Now(),
@@ -41,20 +39,20 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // AskHandler handles the ask endpoint
-func AskHandler(w http.ResponseWriter, r *http.Request) {
-	var req models.AskRequest
+func (h Handler) AskHandler(w http.ResponseWriter, r *http.Request) {
+	var req AskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body", err)
 		return
 	}
 
-	generatedResponse, chunks, err := ragService.GenerateResponse(req.Query)
+	generatedResponse, chunks, err := h.RagService.GenerateResponse(req.Query)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to generate the response", err)
 		return
 	}
 
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   true,
 		Query:     req.Query,
 		Answer:    generatedResponse,
@@ -67,20 +65,20 @@ func AskHandler(w http.ResponseWriter, r *http.Request) {
 
 // AskHandler handles the ask-directly endpoint
 // bypasses RAG and uses only the LLM to generate a response
-func AskDirectlyHandler(w http.ResponseWriter, r *http.Request) {
-	var req models.AskRequest
+func (h Handler) AskDirectlyHandler(w http.ResponseWriter, r *http.Request) {
+	var req AskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body", err)
 		return
 	}
 
-	generatedResponse, err := ragService.GenerateResponseWithoutChunks(req.Query)
+	generatedResponse, err := h.RagService.GenerateResponseWithoutChunks(req.Query)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to generate the response", err)
 		return
 	}
 
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   true,
 		Query:     req.Query,
 		Answer:    generatedResponse,
@@ -91,7 +89,7 @@ func AskDirectlyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // StoreBookHandler is endpoint to store document into vector DB
-func StoreBookHandler(w http.ResponseWriter, r *http.Request) {
+func (h Handler) StoreBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
@@ -106,13 +104,13 @@ func StoreBookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ragService.StoreData(string(content))
+	err = h.RagService.StoreData(string(content))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to store teh data", err)
 		return
 	}
 
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   true,
 		Message:   "File data stored successfully!",
 		Timestamp: time.Now(),
@@ -123,15 +121,15 @@ func StoreBookHandler(w http.ResponseWriter, r *http.Request) {
 
 // EvaluationGenerationHandler returns the evaluation results
 // of the generation part of the RAGpipeline with the eval data
-func EvaluationGenerationHandler(w http.ResponseWriter, r *http.Request) {
-	result, err := evaluator.GetGenerationEvaluateResult()
+func (h Handler) EvaluationGenerationHandler(w http.ResponseWriter, r *http.Request) {
+	result, err := h.Evaluator.GetGenerationEvaluateResult()
 
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Generator evaluation in Rag pipeline could not be done: ", err)
 		return
 	}
 
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   true,
 		Data:      result,
 		Timestamp: time.Now(),
@@ -142,15 +140,15 @@ func EvaluationGenerationHandler(w http.ResponseWriter, r *http.Request) {
 
 // EvaluationRetrievalHandler returns the evaluation results
 // of the Retrieval part of the RAGpipeline with the eval data
-func EvaluationRetrievalHandler(w http.ResponseWriter, r *http.Request) {
-	result, err := evaluator.GetRetrievalEvaluateResult()
+func (h Handler) EvaluationRetrievalHandler(w http.ResponseWriter, r *http.Request) {
+	result, err := h.Evaluator.GetRetrievalEvaluateResult()
 
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Retrieval evaluation in Rag pipeline could not be done: ", err)
 		return
 	}
 
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   true,
 		Data:      result,
 		Timestamp: time.Now(),
@@ -164,7 +162,7 @@ func EvaluationHandler(w http.ResponseWriter, r *http.Request) {
 	message := "For Retrieval Evaluation:  GET http://localhost:8080/api/evaluation/retrieval"
 	message += "-- For Generation Evaluation:  GET http://localhost:8080/api/evaluation/generation"
 
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   true,
 		Message:   message,
 		Timestamp: time.Now(),
