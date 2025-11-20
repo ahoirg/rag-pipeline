@@ -206,12 +206,6 @@ rag-pipeline/
 │   │   └── empty_source/
 │   └── notre_dame_contexts.txt
 │
-├── qdrant_storage/                  # Local Qdrant vector DB storage
-│   ├── collections/
-│   │   ├── api_collection/
-│   │   ├── eval_collection/
-│   │   └── treasure_island/
-│   └── raft_state.json
 │
 ├── .env                             # Environment variables
 ├── .gitignore                       # Git ignore rules
