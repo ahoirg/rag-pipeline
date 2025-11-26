@@ -3,21 +3,14 @@ package evaluation
 import (
 	"fmt"
 	"log"
-	"rag-pipeline/models"
-	"rag-pipeline/services"
-	"rag-pipeline/utils"
+	"rag-pipeline/configs"
+	"rag-pipeline/internal/services/rag_manager"
+	"rag-pipeline/internal/utils"
 )
 
-type Evaluator struct {
-	RAGService                 *services.RAGService
-	RetrievalEvaluationResult  *models.RetrievalEvaluationResult
-	GenerationEvaluationResult *models.GenerationEvaluationResult
-	Config                     *models.Config
-}
-
 // NewChunker creates and returns a new Evaluator
-func NewEvaluator(config *models.Config) (*Evaluator, error) {
-	ragService, err := services.NewRAGService(config, config.Evaluation.CollectionName)
+func NewEvaluator(config *configs.Config) (*Evaluator, error) {
+	ragService, err := rag_manager.NewRAGService(config, config.Evaluation.CollectionName)
 	if err != nil {
 		return nil, fmt.Errorf("evaluation.go| NewEvaluator: initialization error %w", err)
 	}
@@ -35,7 +28,7 @@ func NewEvaluator(config *models.Config) (*Evaluator, error) {
 }
 
 // GetRetrievalEvaluateResult returns the retrieval evaluation result
-func (eval *Evaluator) GetRetrievalEvaluateResult() (*models.RetrievalEvaluationResult, error) {
+func (eval *Evaluator) GetRetrievalEvaluateResult() (*RetrievalEvaluationResult, error) {
 	if eval.RetrievalEvaluationResult != nil {
 		return eval.RetrievalEvaluationResult, nil
 	}
@@ -56,7 +49,7 @@ func (eval *Evaluator) GetRetrievalEvaluateResult() (*models.RetrievalEvaluation
 }
 
 // GetGenerationEvaluateResult returns the generation evaluation result
-func (eval *Evaluator) GetGenerationEvaluateResult() (*models.GenerationEvaluationResult, error) {
+func (eval *Evaluator) GetGenerationEvaluateResult() (*GenerationEvaluationResult, error) {
 	if eval.GenerationEvaluationResult != nil {
 		return eval.GenerationEvaluationResult, nil
 	}

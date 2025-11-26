@@ -1,30 +1,33 @@
-package services
+package rag_manager
 
 import (
 	"fmt"
-	"rag-pipeline/db"
-	"rag-pipeline/models"
+	"rag-pipeline/configs"
+	"rag-pipeline/internal/infrastructure/vector_db"
+	"rag-pipeline/internal/services/chunkers"
+	"rag-pipeline/internal/services/embedders"
+	"rag-pipeline/internal/services/generators"
 )
 
 type RAGService struct {
-	Chunker   *ChunkConfig
-	Embedder  *OllamaEmbedder
-	QdrantDB  *db.QdrantDatabase
-	Generator *LLMService
-	Config    *models.Config
+	Chunker   *chunkers.ChunkManager
+	Embedder  *embedders.OllamaEmbedder
+	QdrantDB  *vector_db.QdrantDatabase
+	Generator *generators.GeneratorManager
+	Config    *configs.Config
 }
 
 // NewRAGService initializes the RAG service by setting up the Qdrant client and preparing the vector database
-func NewRAGService(config *models.Config, collectionName string) (*RAGService, error) {
-	qdrantDB, err := db.NewQdrantDatabase(config.Qdrant.Host, config.Qdrant.Port, collectionName)
+func NewRAGService(config *configs.Config, collectionName string) (*RAGService, error) {
+	qdrantDB, err := vector_db.NewQdrantDatabase(config.Qdrant.Host, config.Qdrant.Port, collectionName)
 	if err != nil {
 		return nil, fmt.Errorf("rag_service.go| NewRAGService: initialization error %w", err)
 	}
 
 	ragService := RAGService{
-		Chunker:   NewChunker(config.Chunk.Size, config.Chunk.Overlap),
-		Embedder:  NewOllamaEmbedder(config.Ollama.BaseURL, config.Embedding.ModelName, config.Embedding.Endpoint),
-		Generator: NewLLMService(config.Ollama.BaseURL, config.Generator.Endpoint, config.Generator.ModelName),
+		Chunker:   chunkers.NewChunker(config.Chunk.Size, config.Chunk.Overlap),
+		Embedder:  embedders.NewOllamaEmbedder(config.Ollama.BaseURL, config.Embedding.ModelName, config.Embedding.Endpoint),
+		Generator: generators.NewLLMService(config.Ollama.BaseURL, config.Generator.Endpoint, config.Generator.ModelName),
 		QdrantDB:  qdrantDB,
 		Config:    config,
 	}
@@ -66,7 +69,7 @@ func (r *RAGService) GenerateResponseWithoutChunks(question string) (string, err
 }
 
 // RetrieveRelevantChunks retrieves the most relevant chunks for the given query
-func (r *RAGService) RetrieveRelevantChunks(query string, topK int) ([]models.RetrievalResult, error) {
+func (r *RAGService) RetrieveRelevantChunks(query string, topK int) ([]RetrievalResult, error) {
 
 	queryEmbedding, err := r.Embedder.EmbedQuery(query)
 	if err != nil {
@@ -78,9 +81,9 @@ func (r *RAGService) RetrieveRelevantChunks(query string, topK int) ([]models.Re
 		return nil, fmt.Errorf("RetrieveRelevantChunks: failed to query Qdrant: %w", err)
 	}
 
-	var results []models.RetrievalResult
+	var results []RetrievalResult
 	for _, point := range searchResult {
-		results = append(results, models.RetrievalResult{
+		results = append(results, RetrievalResult{
 			ChunkID: int(point.Payload["id"].GetIntegerValue()),
 			Text:    point.Payload["text"].GetStringValue(),
 			Score:   point.Score,

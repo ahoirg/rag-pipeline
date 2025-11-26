@@ -1,4 +1,4 @@
-package models
+package rag_manager
 
 type RetrievalResult struct {
 	ChunkID int

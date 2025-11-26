@@ -3,14 +3,13 @@ package evaluation
 import (
 	"encoding/json"
 	"fmt"
-	"rag-pipeline/models"
-	"rag-pipeline/utils"
+	"rag-pipeline/internal/utils"
 
 	"github.com/drewlanenga/govector"
 )
 
 // EvaluateGeneration runs the full evaluation pipeline for generated responses
-func (eval *Evaluator) EvaluateGeneration(generationDataPath string) (*models.GenerationEvaluationResult, error) {
+func (eval *Evaluator) EvaluateGeneration(generationDataPath string) (*GenerationEvaluationResult, error) {
 	qas, err := eval.loadGeneratorQA(generationDataPath)
 	if err != nil {
 		return nil, err
@@ -36,7 +35,7 @@ func (eval *Evaluator) EvaluateGeneration(generationDataPath string) (*models.Ge
 		totalScore += tc.SimilarityScore
 	}
 
-	result := &models.GenerationEvaluationResult{
+	result := &GenerationEvaluationResult{
 		TestCaseResults:    generationCases,
 		AvgSimilarityScore: totalScore / float64(len(generationCases)),
 	}
@@ -45,8 +44,8 @@ func (eval *Evaluator) EvaluateGeneration(generationDataPath string) (*models.Ge
 }
 
 // getGeneratorResponse generates answers for each QA pair and returns them with generated answers
-func (eval *Evaluator) getGeneratorResponse(qaData []models.QA) ([]models.GenerationEvaluationCase, error) {
-	var evaluationCase []models.GenerationEvaluationCase
+func (eval *Evaluator) getGeneratorResponse(qaData []QA) ([]GenerationEvaluationCase, error) {
+	var evaluationCase []GenerationEvaluationCase
 
 	for _, qa := range qaData {
 		generatedAnswer, chunks, err := eval.RAGService.GenerateResponse(qa.Question)
@@ -54,7 +53,7 @@ func (eval *Evaluator) getGeneratorResponse(qaData []models.QA) ([]models.Genera
 			return nil, fmt.Errorf("generation.go |failed to generate response: %w", err)
 		}
 
-		evaluationCase = append(evaluationCase, models.GenerationEvaluationCase{
+		evaluationCase = append(evaluationCase, GenerationEvaluationCase{
 			Question:        qa.Question,
 			GroundTruth:     qa.Answer,
 			GeneratedAnswer: generatedAnswer,
@@ -66,7 +65,7 @@ func (eval *Evaluator) getGeneratorResponse(qaData []models.QA) ([]models.Genera
 }
 
 // getEmbeddedResults generates embeddings for ground truths and generated answers
-func (eval *Evaluator) getEmbeddedResults(results *[]models.GenerationEvaluationCase) error {
+func (eval *Evaluator) getEmbeddedResults(results *[]GenerationEvaluationCase) error {
 	var groundTruths []string
 	var generatedAnswers []string
 
@@ -94,7 +93,7 @@ func (eval *Evaluator) getEmbeddedResults(results *[]models.GenerationEvaluation
 }
 
 // calculateSimilarityScores computes cosine similarity between ground truth and generated embeddings
-func (eval *Evaluator) calculateSimilarityScores(results *[]models.GenerationEvaluationCase) error {
+func (eval *Evaluator) calculateSimilarityScores(results *[]GenerationEvaluationCase) error {
 	for i := range *results {
 
 		vec1 := make([]float64, len((*results)[i].GroundTruthEmbedding))
@@ -116,14 +115,14 @@ func (eval *Evaluator) calculateSimilarityScores(results *[]models.GenerationEva
 }
 
 // loadGeneratorQA reads QA data from a JSON file and returns it as a slice of models.QA
-func (eval *Evaluator) loadGeneratorQA(generationDataPath string) ([]models.QA, error) {
+func (eval *Evaluator) loadGeneratorQA(generationDataPath string) ([]QA, error) {
 
 	text, err := utils.LoadDocument(generationDataPath)
 	if err != nil {
 		return nil, fmt.Errorf("generation.go |failed to load QA JSON: %w", err)
 	}
 
-	var qaData []models.QA
+	var qaData []QA
 	if err := json.Unmarshal([]byte(text), &qaData); err != nil {
 		return nil, fmt.Errorf("generation.go |failed to parse QA JSON: %w", err)
 	}

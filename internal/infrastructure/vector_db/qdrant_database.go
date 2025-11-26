@@ -1,10 +1,10 @@
-package db
+package vector_db
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"rag-pipeline/models"
+	"rag-pipeline/internal/services/chunkers"
 
 	"github.com/qdrant/go-client/qdrant"
 )
@@ -56,7 +56,7 @@ func (qdb *QdrantDatabase) CreateQdrantCollection(vectorSize uint64) error {
 }
 
 // AddVectorsToQdrant adds the given chunks and their corresponding embeddings to the collection
-func (qdb *QdrantDatabase) AddVectorsToQdrant(chunks []models.Chunk, embeddings [][]float32) error {
+func (qdb *QdrantDatabase) AddVectorsToQdrant(chunks []chunkers.Chunk, embeddings [][]float32) error {
 
 	var points []*qdrant.PointStruct
 

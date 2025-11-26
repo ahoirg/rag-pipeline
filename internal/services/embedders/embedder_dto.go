@@ -1,4 +1,13 @@
-package models
+package embedders
+
+import "net/http"
+
+type OllamaEmbedder struct {
+	BaseURL  string
+	Endpoint string
+	Model    string
+	Client   *http.Client
+}
 
 type EmbedRequest struct {
 	Model string   `json:"model"`

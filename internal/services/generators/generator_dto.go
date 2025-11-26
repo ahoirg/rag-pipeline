@@ -1,4 +1,12 @@
-package models
+package generators
+
+import "net/http"
+
+type GeneratorManager struct {
+	EndPoint  string
+	ModelName string
+	Client    *http.Client
+}
 
 type LLMResult struct {
 	Response string `json:"response"`

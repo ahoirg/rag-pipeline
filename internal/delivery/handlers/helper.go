@@ -1,9 +1,8 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
-	"rag-pipeline/models"
 	"time"
 )
 
@@ -17,7 +16,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 // writeError is a helper function to write error responses
 func writeError(w http.ResponseWriter, status int, message string, err error) {
 
-	response := models.ApiResponse{
+	response := ApiResponse{
 		Success:   false,
 		Message:   message + err.Error(),
 		Timestamp: time.Now(),

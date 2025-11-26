@@ -4,18 +4,17 @@ package evaluation
 import (
 	"encoding/json"
 	"fmt"
-	"rag-pipeline/models"
-	"rag-pipeline/utils"
+	"rag-pipeline/internal/utils"
 )
 
 // EvaluateRetrieval runs the full evaluation pipeline for retrieval evaluation
-func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*models.RetrievalEvaluationResult, error) {
+func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*RetrievalEvaluationResult, error) {
 	evalData, err := loadQuestions(retrievalDataPath)
 	if err != nil {
 		return nil, err
 	}
 
-	var testCaseResults []models.RetrievalTestCaseResult
+	var testCaseResults []RetrievalTestCaseResult
 	for _, data := range evalData {
 		retrievedChunks, err := eval.RAGService.RetrieveRelevantChunks(data.Question, eval.Config.Retrieval.TopK)
 		if err != nil {
@@ -32,7 +31,7 @@ func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*models.Retr
 			relevantIDs[i] = chunk.ID
 		}
 
-		testCaseResults = append(testCaseResults, models.RetrievalTestCaseResult{
+		testCaseResults = append(testCaseResults, RetrievalTestCaseResult{
 			Question:          data.Question,
 			ExpectedAnswer:    data.ExpextedAnswer,
 			ExpectedChunkIDs:  relevantIDs,
@@ -45,12 +44,12 @@ func (eval *Evaluator) EvaluateRetrieval(retrievalDataPath string) (*models.Retr
 
 // calculateRetrievalMetricResults computes precision, recall, and F1 scores for each retrieval test case
 // and return them as a models.RetrievalEvaluationResult
-func calculateRetrievalMetricResults(testCaseResults []models.RetrievalTestCaseResult) *models.RetrievalEvaluationResult {
+func calculateRetrievalMetricResults(testCaseResults []RetrievalTestCaseResult) *RetrievalEvaluationResult {
 	var precisions []float64
 	var recalls []float64
 	var f1s []float64
 
-	duplicatedTestCaseResults := make([]models.RetrievalTestCaseResult, len(testCaseResults))
+	duplicatedTestCaseResults := make([]RetrievalTestCaseResult, len(testCaseResults))
 	copy(duplicatedTestCaseResults, testCaseResults)
 
 	for i, tc := range testCaseResults {
@@ -77,7 +76,7 @@ func calculateRetrievalMetricResults(testCaseResults []models.RetrievalTestCaseR
 		f1s = append(f1s, f1)
 	}
 
-	return &models.RetrievalEvaluationResult{
+	return &RetrievalEvaluationResult{
 		TestCaseResults: duplicatedTestCaseResults,
 		AvgPrecision:    utils.Average(precisions),
 		AvgRecall:       utils.Average(recalls),
@@ -85,14 +84,14 @@ func calculateRetrievalMetricResults(testCaseResults []models.RetrievalTestCaseR
 	}
 }
 
-// loadQuestions reads QA data from a JSON file and returns it as a slice of models.RetrievalEvalData
-func loadQuestions(filePath string) ([]models.RetrievalEvalData, error) {
+// loadQuestions reads QA data from a JSON file and returns it as a slice of RetrievalEvalData
+func loadQuestions(filePath string) ([]RetrievalEvalData, error) {
 	jsonString, err := utils.LoadDocument(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("retrieval.go| failed to LoadQuestions file: %w", err)
 	}
 
-	var retrievalEvalData []models.RetrievalEvalData
+	var retrievalEvalData []RetrievalEvalData
 	if err := json.Unmarshal([]byte(jsonString), &retrievalEvalData); err != nil {
 		return nil, fmt.Errorf("retrieval.go| failed to LoadQuestions JSON: %w", err)
 	}

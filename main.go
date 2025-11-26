@@ -1,54 +1,35 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-
-	"rag-pipeline/api"
-	"rag-pipeline/models"
-	"rag-pipeline/utils"
+	"rag-pipeline/configs"
+	"rag-pipeline/internal/delivery/routers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"gopkg.in/yaml.v3"
 )
 
-const config_path = "config.yaml"
-
 func main() {
-
-	var config models.Config
-	if err := loadConfig(&config); err != nil {
+	config, err := configs.NewConfig()
+	if err != nil {
 		log.Fatalf("main.go|initialization error: %v", err)
 	}
 
 	// Initialize API dependencies
-	if err := api.InitApiDependencies(&config); err != nil {
+	sub_router, err := routers.CreateRAGRouter(config)
+	if err != nil {
 		log.Fatalf("main.go|initialization to start: %v", err)
 	}
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)    // Request logging
 	r.Use(middleware.Recoverer) // Prevents server crash
-	r.Mount("/", api.CreateRAGRouter())
+	r.Mount("/", sub_router)
 
 	// Start the server
 	port := ":" + config.Api.Port
 	if err := http.ListenAndServe(port, r); err != nil {
 		log.Fatalf("main.go|Server failed to start: %v", err)
 	}
-}
-
-func loadConfig(config *models.Config) error {
-	raw_config, err := utils.LoadDocument(config_path)
-	if err != nil {
-		return fmt.Errorf("main.go|failed to load config.yaml: %w", err)
-	}
-
-	if err := yaml.Unmarshal([]byte(raw_config), &config); err != nil {
-		return fmt.Errorf("main.go|failed to convert raw_config to yaml: %w", err)
-	}
-
-	return nil
 }

@@ -1,4 +1,4 @@
-package services
+package embedders
 
 import (
 	"bytes"
@@ -6,16 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"rag-pipeline/models"
 	"time"
 )
-
-type OllamaEmbedder struct {
-	BaseURL  string
-	Endpoint string
-	Model    string
-	Client   *http.Client
-}
 
 // NewOllamaEmbedder creates and returns a new OllamaEmbedder
 func NewOllamaEmbedder(baseUrl string, modelName string, endpoint string) *OllamaEmbedder {
@@ -32,7 +24,7 @@ func NewOllamaEmbedder(baseUrl string, modelName string, endpoint string) *Ollam
 // EmbedChunks sends the chunks to the Ollama embedder and returns their embeddings
 func (e *OllamaEmbedder) EmbedChunks(chunks []string) ([][]float32, error) {
 
-	reqBody := models.EmbedRequest{
+	reqBody := EmbedRequest{
 		Model: e.Model,
 		Input: chunks,
 	}
@@ -50,7 +42,7 @@ func (e *OllamaEmbedder) EmbedChunks(chunks []string) ([][]float32, error) {
 // EmbedQuery sends the query to the Ollama embedder and returns its embeddings
 func (e *OllamaEmbedder) EmbedQuery(query string) ([]float32, error) {
 
-	reqBody := models.EmbedRequest{
+	reqBody := EmbedRequest{
 		Model: e.Model,
 		Input: []string{query},
 	}
@@ -68,9 +60,9 @@ func (e *OllamaEmbedder) EmbedQuery(query string) ([]float32, error) {
 }
 
 // embed sends the given embedding request to the Ollama and returns the decoded embedding response
-func (e *OllamaEmbedder) embed(reqBody models.EmbedRequest) (models.EmbedResponse, error) {
+func (e *OllamaEmbedder) embed(reqBody EmbedRequest) (EmbedResponse, error) {
 
-	var embedResp models.EmbedResponse
+	var embedResp EmbedResponse
 
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
