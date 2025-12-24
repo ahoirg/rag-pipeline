@@ -10,7 +10,6 @@ It is a modular Retrieval‑Augmented Generation (RAG) pipeline written in Go. I
 - [4. API Overview](#4-api-overview)
 - [5. Development Decisions](#5-development-decisions)
 - [6. Pipeline Evaluation and Improvements](#6-pipeline-evaluation-and-improvements)
-- [7. Future Improvements](#7-future-improvements)
 
 ---
 ## 1) Core Features 
